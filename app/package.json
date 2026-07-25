@@ -1,0 +1,32 @@
+{
+  "name": "readitout",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Read It Out: a PDF reader that reads aloud, annotates and exports.",
+  "scripts": {
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"tsx watch server/server.ts\"",
+    "dev:web": "vite",
+    "dev:api": "tsx watch server/server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "build": "npm run typecheck && vite build && esbuild server/server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server.js",
+    "build:static": "npm run typecheck && vite build",
+    "deploy:firebase": "bash scripts/deploy-firebase.sh",
+    "start": "node dist/server.js",
+    "preview": "npm run build && npm run start",
+    "greeting": "node scripts/generate-greeting.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^22.10.0",
+    "concurrently": "^9.1.0",
+    "esbuild": "^0.24.2",
+    "playwright": "^1.61.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  },
+  "dependencies": {
+    "pdfjs-dist": "6.1.200"
+  }
+}

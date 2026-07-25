@@ -1,0 +1,12 @@
+# Uploaded to Cloud Build. Keep the context small — everything is rebuilt in the image.
+.git
+.gitignore
+node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.*
+.vscode
+.idea
+.claude

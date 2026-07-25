@@ -1,0 +1,84 @@
+version: "3"
+
+# Loads FIREBASE_PROJECT_ID (and optional FIREBASE_HOSTING_SITE / FIREBASE_TOKEN) from .env.
+dotenv: [".env"]
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - npm ci
+
+  typecheck:
+    desc: Type-check the app and server
+    cmds:
+      - npm run typecheck
+
+  dev:
+    desc: Run the dev server with live reload — open the http://localhost:5173 URL it prints
+    cmds:
+      - cmd: npm run dev:web
+        interactive: true
+
+  dev:full:
+    desc: Dev app (Vite :5173) + local API voice proxy (Node :4173, only if you self-host premium voices)
+    cmds:
+      - cmd: npm run dev
+        interactive: true
+
+  build:
+    desc: Build the static site to dist/public
+    cmds:
+      - npm run build:static
+
+  serve:
+    desc: Build and serve the production build locally (dist/public on http://localhost:4173)
+    cmds:
+      - npm run build
+      - cmd: npm run start
+        interactive: true
+
+  login:
+    desc: Sign in to Firebase (one-time, opens your browser)
+    cmds:
+      - cmd: npx --yes firebase-tools login
+        interactive: true
+
+  deploy:
+    desc: Build the static site and deploy it to Firebase Hosting
+    cmds:
+      - task: build
+      - |
+        : "${FIREBASE_PROJECT_ID:?Set FIREBASE_PROJECT_ID in .env}"
+        ONLY="hosting"
+        [ -n "${FIREBASE_HOSTING_SITE:-}" ] && ONLY="hosting:${FIREBASE_HOSTING_SITE}"
+        set -- deploy --only "$ONLY" --project "$FIREBASE_PROJECT_ID" --non-interactive
+        [ -n "${FIREBASE_TOKEN:-}" ] && set -- "$@" --token "$FIREBASE_TOKEN"
+        echo "→ Deploying to Firebase project: $FIREBASE_PROJECT_ID"
+        npx --yes firebase-tools "$@"
+      - echo "✓ Deployed → https://${FIREBASE_HOSTING_SITE:-$FIREBASE_PROJECT_ID}.web.app"
+
+  clean:
+    desc: Remove the build output
+    cmds:
+      - rm -rf dist
+
+  greeting:
+    desc: Record the lobby greeting in Kokoro voices via OpenRouter (asks for your API key)
+    cmds:
+      - cmd: node scripts/generate-greeting.mjs
+        interactive: true
+
+  greeting:voices:
+    desc: Same as `greeting`, but choose which Kokoro voices (e.g. task greeting:voices VOICES=af_heart,bm_george)
+    vars:
+      VOICES: '{{.VOICES | default "af_heart,am_adam,bf_emma"}}'
+    cmds:
+      - cmd: GREETING_VOICES="{{.VOICES}}" node scripts/generate-greeting.mjs
+        interactive: true

@@ -1,0 +1,24 @@
+# dependencies & build output
+node_modules/
+dist/
+
+# local secrets / deploy config
+.env
+.last-image
+
+# firebase deploy cache
+.firebase/
+
+# logs & OS cruft
+*.log
+.DS_Store
+
+# local tooling state
+.claude/settings.local.json
+.claude-flow/
+.playwright-mcp/
+
+# demo videos and draft launch copy, kept local and not in history.
+# The sample PDF is the exception: it ships at app/public/the-quiet-hour.pdf so
+# people can try the reader without finding a document first.
+marketing/
