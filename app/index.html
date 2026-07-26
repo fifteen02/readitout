@@ -427,13 +427,19 @@
       <div id="minimap" hidden aria-hidden="true"></div>
       <div class="readerbar">
         <div class="player-zone pz-left">
-          <select id="playerVoice" class="player-voice" aria-label="Reader voice">
-            <option value="en-US-Harper:MAI-Voice-2" selected>Harper</option>
-            <option value="es-MX-Valeria:MAI-Voice-2">Valeria</option>
-            <option value="fr-FR-Soleil:MAI-Voice-2">Soleil</option>
-            <option value="de-DE-Klaus:MAI-Voice-2">Klaus</option>
-            <option value="eve">Eve</option>
-          </select>
+          <!-- Voice picker and engine are one control: the engine describes the voice
+               rather than sitting beside it as a peer. The leading segment turns into a
+               prompt when the reader is on the device's basic voice. -->
+          <div class="voice-group" id="voiceGroup">
+            <button id="engineBadge" class="engine-seg is-basic" type="button" title="Your device's built-in voice. Click to set up a natural one." aria-label="Your device's built-in voice. Click to set up a natural one."><span class="sr-only">Basic voice</span></button>
+            <select id="playerVoice" class="player-voice" aria-label="Reader voice">
+              <option value="en-US-Harper:MAI-Voice-2" selected>Harper</option>
+              <option value="es-MX-Valeria:MAI-Voice-2">Valeria</option>
+              <option value="fr-FR-Soleil:MAI-Voice-2">Soleil</option>
+              <option value="de-DE-Klaus:MAI-Voice-2">Klaus</option>
+              <option value="eve">Eve</option>
+            </select>
+          </div>
           <div class="reading-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
         </div>
         <div class="player-transport">

@@ -1950,6 +1950,17 @@ railIcons.forEach((btn) => {
 });
 ui.railFlyoutClose.addEventListener("click", closePanel);
 
+// The transport-bar engine badge is a shortcut into voice setup: seeing "Free voice" is
+// only useful if acting on it is one click away.
+document.getElementById("engineBadge")?.addEventListener("click", (event) => {
+  // The badge sits outside the rail and its flyout, so without this the document-level
+  // "click outside dismisses the panel" handler fires on the same click and closes what
+  // we just opened.
+  event.stopPropagation();
+  openPanel("settings");
+  document.getElementById("localSetup")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+});
+
 // "About" info button → small popover with app + fifteen02 credit.
 const railInfo = document.getElementById("railInfo");
 const infoPopover = document.getElementById("infoPopover");

@@ -67,13 +67,62 @@ export function initSettings(ui: UI, setStatus: (message: string) => void): void
     // otherwise fall back to the browser's built-in voice.
     const httpEngine = local || ui.apiKey.value.trim().length > 0;
     if (readerMode) readerMode.value = httpEngine ? "premium" : "local";
+    // The browser voice is the robotic one every OS ships. Readers stay on it because
+    // nothing tells them otherwise, so that state is called out in two places: a badge on
+    // the transport bar (always visible) and a callout in Settings (has room for the how).
+    const onBrowserVoice = !local && !httpEngine;
+    const badge = document.getElementById("engineBadge");
+    if (badge) {
+      // Quality and cost are separate axes. Kokoro over Docker is the same model as the
+      // paid route, so it is premium AND free; only the device's built-in voice is basic.
+      // Labelling it "free" implied "lesser", which it is not.
+      const state = local ? "local" : httpEngine ? "cloud" : "basic";
+      const chip = {
+        basic: {
+          label: "Basic",
+          detail: "Your device's built-in voice. Click to switch to a natural one: free with Docker, or a few cents with OpenRouter.",
+          icon: '<path d="M3 9v6h4l5 4V5L7 9H3z"/>'
+        },
+        local: {
+          label: "Local",
+          detail: "Kokoro running on your own machine. Premium quality, free, and nothing leaves your computer. Click to manage the server.",
+          icon: '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>'
+        },
+        cloud: {
+          label: "Premium",
+          detail: "Premium voice through your own OpenRouter key. Click to change the family or clear the key.",
+          icon: '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97 6 6 0 0 0-11.64-1.5A3.75 3.75 0 0 0 6.75 19z"/>'
+        }
+      }[state];
+      badge.classList.toggle("is-basic", state === "basic");
+      badge.innerHTML =
+        `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" ` +
+        `stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${chip.icon}</svg>` +
+        `<span class="eb-label"></span>`;
+      const text = badge.querySelector(".eb-label");
+      if (text) text.textContent = chip.label;
+      badge.title = chip.detail;
+      badge.setAttribute("aria-label", chip.detail);
+    }
     const hint = document.getElementById("voiceEngineHint");
     if (hint) {
-      hint.textContent = local
-        ? "Using free local voices (Kokoro). Manage the server in Settings."
-        : httpEngine
-          ? "Using premium voices. Change the family or clear the key in Settings."
-          : "Using the local browser voice. Add an OpenRouter key in Settings to switch on premium voices.";
+      hint.classList.toggle("voice-upsell", onBrowserVoice);
+      if (onBrowserVoice) {
+        // This hint sits in the Listen panel, but both setup routes live in Settings, so
+        // it has to say where to go rather than "below".
+        hint.innerHTML =
+          '<strong>You are using the free voice built into your device.</strong> It is the ' +
+          'robotic one. For a natural, audiobook-style voice there are two routes, both in ' +
+          '<strong>Settings</strong>:<br>' +
+          '<strong>Docker</strong> runs Kokoro on your own machine. Free, no key, nothing ' +
+          'leaves your computer.<br>' +
+          '<strong>OpenRouter</strong> uses your own key ' +
+          '<span class="vu-cost">(a 400 page book costs well under a dollar)</span>.';
+      } else {
+        hint.textContent = local
+          ? "Using free Kokoro voices running on your own machine. Manage the server in Settings."
+          : "Using premium voices through your own OpenRouter key. Change the family or clear the key in Settings.";
+      }
     }
     refreshVoices();
   };
@@ -136,16 +185,29 @@ function refreshVoices(): void {
     if (ttsModel) syncVoiceOptions({ ttsModel, voiceSelect, playerVoice });
     return;
   }
-  const voices = (() => { try { return window.speechSynthesis?.getVoices() ?? []; } catch { return []; } })();
+  const allVoices = (() => { try { return window.speechSynthesis?.getVoices() ?? []; } catch { return []; } })();
+  // Hide network voices. Chrome's "Google ..." voices synthesise on Google's servers, and
+  // when that is unreachable they never speak AND never fire an error, so the reader just
+  // gets silence with nothing to click. Offering them at all is a trap.
+  // Some platforms (notably Android/ChromeOS) ship only network voices, so fall back to the
+  // full list rather than presenting an empty picker.
+  const onDevice = allVoices.filter((v) => v.localService);
+  const voices = onDevice.length ? onDevice : allVoices;
   const current = voiceSelect.value;
+  // Only reachable in the fallback above, where every available voice is a network one.
+  const label = (v: SpeechSynthesisVoice): string => {
+    const suffix = v.localService ? "" : " (network)";
+    return v.default ? `${v.name} (default)${suffix}` : `${v.name}${suffix}`;
+  };
   const build = (): HTMLOptionElement[] =>
     voices.length
-      ? voices.map((v) => new Option(v.default ? `${v.name} (default)` : v.name, v.name))
+      ? voices.map((v) => new Option(label(v), v.name))
       : [new Option("System default voice", "")];
   voiceSelect.replaceChildren(...build());
-  voiceSelect.value = voices.some((v) => v.name === current)
-    ? current
-    : (voices.find((v) => v.default)?.name ?? voices[0]?.name ?? "");
+  // A stored preference may name a voice that is no longer offered (an older build let
+  // network voices be chosen), so fall through to the platform default.
+  const preferred = voices.find((v) => v.default) ?? voices[0];
+  voiceSelect.value = voices.some((v) => v.name === current) ? current : (preferred?.name ?? "");
   if (playerVoice) {
     playerVoice.replaceChildren(...build());
     playerVoice.value = voiceSelect.value;

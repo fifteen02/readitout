@@ -367,6 +367,14 @@ aside {
 
 .panel-hint { margin: 12px 0 2px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .field-hint { margin: 6px 0 2px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+/* Same element, promoted to a callout when the reader is on the plain browser voice, so
+   the (much better) premium options are visible rather than buried in muted grey text. */
+.field-hint.voice-upsell {
+  margin: 10px 0 2px; padding: 10px 12px; border-radius: 10px;
+  background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--ink-soft);
+}
+.field-hint.voice-upsell strong { color: var(--ink); font-weight: 600; }
+.field-hint.voice-upsell .vu-cost { color: var(--muted); }
 .setup-card { margin: 10px 0 12px; padding: 12px 13px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--accent-line); }
 .setup-card[hidden] { display: none; }
 .setup-title { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
@@ -1401,6 +1409,11 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
 
 /* ---- Reader (audio) bar -------------------------------------- */
 .readerbar {
+  /* Concentric radii: the bar is a container, everything inside it is a control.
+     All controls share --r-ctl exactly so they match each other; the shell is softer
+     because it is a different kind of object. Two numbers, one rule. */
+  --r-shell: 16px;
+  --r-ctl: 8px;
   /* A dark "puck" in every theme so the controls stay high-contrast — a pale pill on the
      light page was hard to read. Redefining the tokens locally flips the whole interior
      to light-on-dark without touching each control rule. */
@@ -1412,7 +1425,7 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
   display: flex; align-items: center; gap: 14px; padding: 8px 18px;
   width: fit-content; max-width: min(760px, 94%);
   background: rgba(24, 21, 17, .9); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, .12); border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .12); border-radius: var(--r-shell);
   box-shadow: 0 10px 34px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 .readerbar .player-zone.pz-left { flex: 0 1 auto; }
@@ -1435,7 +1448,7 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
 /* Speed as a stepper chip (the fine slider lives in the Listen panel). */
 .readerbar #playerRate { display: none; }
 .readerbar #playerRateValue {
-  cursor: pointer; padding: 4px 11px; border-radius: 999px;
+  cursor: pointer; padding: 4px 11px; border-radius: var(--r-ctl);
   border: 1px solid var(--soft-line); font-variant-numeric: tabular-nums;
   transition: background .14s ease, border-color .14s ease;
 }
@@ -1467,6 +1480,37 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
 .player-zone.pz-right { justify-content: flex-end; flex-wrap: nowrap; }
 .player-voice { width: auto; min-width: 92px; max-width: 170px; min-height: 34px; font-size: 13px; border-radius: 8px; padding: 6px 26px 6px 8px; background-color: transparent; border-color: transparent; color: var(--ink-soft); }
 .player-voice:hover { background-color: var(--hover-bg); border-color: transparent; }
+/* Engine badge: says whether the voice is the free device one, free local Kokoro, or a
+   premium model. Tinted while free so the better options stay discoverable. */
+/* Voice picker + engine as a single segmented control. The engine describes the voice,
+   so pairing them reads better than two peers competing next to the play button.
+   Scoped to .readerbar to beat `input, select, textarea, button { width: 100% }` the same
+   way .player-voice is above; without the explicit width these stretch across the bar. */
+.readerbar .voice-group {
+  flex: 0 0 auto; display: inline-flex; align-items: stretch; height: 32px;
+  border: 1px solid var(--line); border-radius: var(--r-ctl); overflow: hidden;
+  transition: border-color .14s ease;
+}
+.readerbar .voice-group:hover { border-color: var(--faint); }
+.readerbar .voice-group .player-voice {
+  border: 0; border-radius: 0; height: 100%; min-height: 0;
+  background-color: transparent; padding: 0 24px 0 9px;
+}
+.readerbar .engine-seg {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  width: auto; min-width: 0; min-height: 0; height: 100%; padding: 0 9px;
+  border: 0; border-right: 1px solid var(--line); border-radius: 0; box-shadow: none;
+  background: rgba(255, 255, 255, .05); color: var(--muted);
+  font-size: 11px; font-weight: 600; letter-spacing: .01em; white-space: nowrap; cursor: pointer;
+  transition: background .14s ease, color .14s ease;
+}
+.readerbar .engine-seg svg { flex: none; opacity: .8; }
+.readerbar .engine-seg:hover { background: rgba(255, 255, 255, .11); color: var(--ink-soft); }
+/* Only the device voice is worth nudging away from, so only it becomes a prompt. The two
+   premium routes are equals: same quiet treatment, distinguished by their icon alone. */
+.readerbar .engine-seg.is-basic { background: rgba(124, 92, 255, .22); color: #cbbcff; }
+.readerbar .engine-seg.is-basic svg { opacity: 1; }
+.readerbar .engine-seg.is-basic:hover { background: rgba(124, 92, 255, .34); color: #ddd4ff; }
 /* Explicit flex-basis: the global input{width:100%} otherwise makes the slider's
    basis 100%, overflowing the row and stacking the controls vertically. */
 .player-zone.pz-right input[type="range"] { flex: 1 1 150px; width: auto; min-width: 110px; max-width: 320px; }
@@ -1495,7 +1539,7 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
 
 .player-transport { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .readerbar .tbtn {
-  width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%;
+  width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: var(--r-ctl);
   display: inline-flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ink-soft);
 }
 .readerbar .tbtn:hover:not(:disabled) { background: var(--hover-bg); border-color: var(--faint); }
@@ -1511,7 +1555,7 @@ input[type="range"]:focus, input[type="range"]:focus-visible { outline: none; bo
 /* Settings buttons: side by side, each on one line (no "Save\nsettings" wrap). */
 #saveSettings, #clearSettings { white-space: nowrap; }
 .readerbar .tbtn.play {
-  width: 46px; height: 46px; min-height: 46px; color: #fff; border-color: transparent;
+  width: 46px; height: 46px; min-height: 46px; border-radius: var(--r-ctl); color: #fff; border-color: transparent;
   background: var(--accent);
   box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 38%, transparent);
   transition: transform .1s ease, box-shadow .16s ease, background .16s ease;
@@ -1898,18 +1942,20 @@ body.modal-open { overflow: hidden; }
 
 /* ── Pomodoro focus timer (topbar) ─────────────────────────────── */
 .pomodoro {
+  --r-shell: 12px;
+  --r-ctl: 8px;
   order: -1;                          /* sit at the left end of the flex topbar */
   display: inline-flex; align-items: center; gap: 9px;
   padding: 5px 9px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: var(--r-shell);
   background: var(--panel);
 }
 .pomodoro select {
   appearance: none; -webkit-appearance: none;
   font: inherit; font-size: 12px; font-weight: 600;
   padding: 3px 11px;
-  border: 1px solid var(--line); border-radius: 999px;
+  border: 1px solid var(--line); border-radius: var(--r-ctl);
   background: transparent; color: var(--ink); cursor: pointer;
   text-align: center; text-align-last: center;
 }
@@ -1947,7 +1993,7 @@ body.modal-open { overflow: hidden; }
   --progress: 0deg;
   display: grid; place-items: center; flex: none;
   width: 32px; height: 32px; min-height: 32px; padding: 0;
-  border: none; border-radius: 50%; cursor: pointer;
+  border: none; border-radius: var(--r-ctl); cursor: pointer;
   color: var(--ink); font-size: 12px; line-height: 1;
   background:
     radial-gradient(farthest-side, var(--panel) 63%, transparent 64%),
@@ -1958,7 +2004,7 @@ body.modal-open { overflow: hidden; }
 .pomodoro #pomoReset {
   display: grid; place-items: center; flex: none;
   width: 28px; height: 28px; min-height: 28px; padding: 0;
-  border: 1px solid var(--line); border-radius: 50%;
+  border: 1px solid var(--line); border-radius: var(--r-ctl);
   background: transparent; color: var(--muted); cursor: pointer;
   font-size: 13px; line-height: 1;
 }

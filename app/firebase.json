@@ -26,6 +26,13 @@
         ]
       },
       {
+        "//": "pdf.js ships its worker as .mjs. With X-Content-Type-Options: nosniff, a wrong or missing JavaScript MIME type makes the browser refuse to run it, pdf.js falls back to its fake worker, and PDFs never render. Set it explicitly rather than relying on the host's default map.",
+        "source": "**/*.mjs",
+        "headers": [
+          { "key": "Content-Type", "value": "text/javascript; charset=utf-8" }
+        ]
+      },
+      {
         "source": "**",
         "headers": [
           {

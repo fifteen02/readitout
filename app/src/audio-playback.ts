@@ -82,16 +82,48 @@ export function playLocalChunk(api: PlaybackApi): void {
   const voiceName = api.ui.voiceSelect.value;
   const picked = voiceName ? speechSynthesis.getVoices().find((v) => v.name === voiceName) : undefined;
   if (picked) utterance.voice = picked;
+  // Chrome's "Google ..." voices are network voices (localService === false): they call
+  // Google's TTS backend, and when that is unreachable they never speak AND never fire an
+  // error, so playback hangs with no way to detect it. Watch for the start event instead.
+  let started = false;
+  let watchdog = 0;
+  const clearWatchdog = (): void => {
+    if (watchdog) window.clearTimeout(watchdog);
+    watchdog = 0;
+  };
+  utterance.onstart = () => {
+    started = true;
+    clearWatchdog();
+  };
   utterance.onend = () => {
+    clearWatchdog();
     if (api.state.playToken !== token) return;
     playLocalChunk(api);
   };
-  utterance.onerror = () => {
+  utterance.onerror = (event) => {
+    clearWatchdog();
+    // speechSynthesis.cancel() is how stop, next/prev and a mid-read voice change are
+    // implemented, and the browser reports that as an error on the utterance being
+    // replaced. Treating it as a failure tore down the playback that had just started,
+    // so next/prev appeared broken while automatic advance (which ends via onend) worked.
+    if (event.error === "canceled" || event.error === "interrupted") return;
+    // A newer utterance has taken over; this one's failure is no longer ours to report.
+    if (api.state.playToken !== token) return;
     const message = "Local read-aloud stopped by the browser.";
     api.onError?.(message);
     api.stopReading(message);
   };
   speechSynthesis.speak(utterance);
+  watchdog = window.setTimeout(() => {
+    watchdog = 0;
+    if (started || api.state.playToken !== token) return;
+    speechSynthesis.cancel();
+    const message = picked && !picked.localService
+      ? `"${picked.name}" is a network voice and never responded. Pick one marked "on device" in the voice list.`
+      : "The browser voice didn't start. Try another voice.";
+    api.onError?.(message);
+    api.stopReading(message);
+  }, 4000);
   api.setStatus("Reading with local browser voice...");
 }
 
