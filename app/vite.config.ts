@@ -8,6 +8,11 @@ export default defineConfig({
       "/api": "http://localhost:4173"
     }
   },
+  // pdf.js instantiates its worker with `{ type: "module" }`, so the worker
+  // bundle has to be ESM — Vite's build default of iife would not load.
+  worker: {
+    format: "es"
+  },
   build: {
     outDir: "dist/public",
     emptyOutDir: true

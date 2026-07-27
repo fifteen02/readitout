@@ -2,12 +2,15 @@
 // reader works offline and no third-party origin can run script in the page — which
 // matters here, because the page holds the user's API key.
 // We expose a small, typed surface for the parts of the API the app uses.
+// Must precede the pdf.js import: pdf.js reaches for ES2025 Uint8Array methods.
+import "./es2025-uint8array";
+
 import type { PdfDocument, PdfViewport } from "../types";
 
 // @ts-expect-error - pdfjs-dist ships types we don't use; the narrow surface is below.
 import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
-// Vite fingerprints the worker and emits it next to the bundle.
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+// Vite bundles our worker entry (polyfill + pdf.js) and emits it next to the bundle.
+import pdfWorkerUrl from "./pdf-worker?worker&url";
 
 export interface PdfjsUtil {
   transform(a: number[], b: number[]): number[];
