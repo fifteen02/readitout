@@ -1,0 +1,51 @@
+.readerbar select.player-voice[hidden] { display: none; }
+.reader-clarity .readerbar .voice-group .voice-picker-trigger {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  border: 0; border-radius: 4px; background: transparent; color: var(--ink);
+  padding: 2px 4px 2px 0; cursor: pointer; text-align: left; font-weight: 400;
+}
+.voice-picker-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.voice-picker-trigger .voice-picker-chevron { flex: none; font-size: 17px; color: var(--muted); }
+.reader-clarity .voice-picker-trigger:hover,
+.reader-clarity .voice-picker-trigger[aria-expanded="true"] { color: var(--accent); }
+.voice-picker-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.voice-picker {
+  position: fixed; top: auto; right: auto; margin: 0; padding: 16px;
+  box-sizing: border-box; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel); color: var(--ink); box-shadow: 0 10px 30px #0002;
+}
+.voice-picker-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.voice-picker-heading h2 { margin: 0; font: var(--type-panel-title); letter-spacing: -.015em; text-transform: none; color: var(--ink); }
+.voice-picker .voice-picker-close { width: 44px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 24px; }
+.voice-picker-group + .voice-picker-group { border-top: 1px solid var(--soft-line); margin-top: 10px; padding-top: 10px; }
+.voice-picker .voice-picker-accent { margin: 8px 10px 6px; color: var(--muted); font: 400 14px/1.4 var(--sans); }
+.voice-picker .voice-picker-option {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px;
+  padding: 9px 12px; border: 1px solid transparent; border-radius: 4px; box-shadow: none;
+  color: var(--ink); background: transparent; font: 400 16px/1.4 var(--sans); text-align: left;
+}
+.voice-picker-option .voice-picker-check { visibility: hidden; color: var(--accent); }
+.voice-picker .voice-picker-option[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.voice-picker-option[aria-selected="true"] .voice-picker-check { visibility: visible; }
+.voice-picker .voice-picker-option:hover { background: var(--hover-bg); }
+.voice-picker button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Fictional literary personas retain the underlying voice names and accents. */
+.voice-portrait { display: block; flex: none; width: 48px; height: 48px; object-fit: contain; }
+.voice-identity { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+.voice-name { font: 400 18px/1.25 var(--serif); }
+.voice-persona { font: 400 13px/1.3 var(--sans); color: var(--ink-soft); }
+.voice-picker .voice-picker-option { gap: 12px; padding: 8px; min-height: 64px; }
+.voice-picker .voice-picker-check { flex: none; }
+html.reader-clarity .readerbar .voice-group .voice-picker-trigger {
+  width: 240px; max-width: 100%; height: 48px; min-height: 44px; gap: 8px; padding: 0;
+}
+.voice-picker-trigger .voice-portrait { width: 44px; height: 44px; }
+.voice-picker-trigger .voice-name { font-size: 17px; white-space: nowrap; }
+@media (max-width: 720px) {
+  html.reader-clarity .readerbar .voice-group { width: 184px; max-width: 100%; }
+  .voice-picker-trigger .voice-name { font-size: 16px; }
+  .voice-picker-trigger .voice-persona { font-size: 12px; }
+  .voice-picker-trigger .voice-portrait { width: 36px; height: 40px; }
+  html.reader-clarity .readerbar .voice-group .voice-picker-trigger { gap: 6px; }
+}

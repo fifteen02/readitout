@@ -1,0 +1,49 @@
+/* A small brass bedside lamp: the only movement is the cord the reader pulls. */
+.reading-lamp {
+  --cord-pull: 0px;
+  position: relative; display: inline-flex; flex: 0 0 56px;
+  align-items: center; justify-content: center; width: 56px; height: 56px;
+  min-height: 44px; padding: 0; border: 0; border-radius: 6px;
+  color: var(--ink-soft); background: transparent; box-shadow: none;
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  overflow: visible; z-index: 3;
+}
+.reading-lamp:hover { background: var(--hover-bg); }
+.reading-lamp:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reading-lamp:active { cursor: grabbing; transform: none; }
+.lamp-drawing { width: 50px; height: 50px; overflow: visible; pointer-events: none; }
+.lamp-stem { stroke: var(--desk-mark); stroke-width: 1.4; stroke-linecap: round; }
+.lamp-shade { fill: var(--desk-light); stroke: var(--desk-edge); stroke-width: 1.25; transition: fill 180ms; }
+.lamp-seam { stroke: var(--desk-edge); stroke-width: .6; opacity: .5; }
+.lamp-glow { fill: #efc976; opacity: .18; transition: opacity 180ms; }
+.lamp-cord { transform: translateY(var(--cord-pull)); transition: transform 220ms cubic-bezier(.16,1,.3,1); }
+.lamp-cord path { stroke: currentColor; stroke-width: 1; }
+.lamp-cord circle { fill: var(--desk-wood); stroke: var(--desk-edge); stroke-width: .7; }
+.lamp-string-extension {
+  stroke: currentColor; stroke-width: 1; transform: scaleY(var(--cord-stretch, 0));
+  transform-origin: 36px 27px; transition: transform 220ms cubic-bezier(.16,1,.3,1);
+}
+.pulling :is(.lamp-cord, .lamp-string-extension) { transition: none; }
+[data-theme="dark"] .lamp-shade { fill: var(--desk-leather); stroke: var(--desk-edge); }
+[data-theme="dark"] .lamp-seam { stroke: var(--desk-edge); }
+[data-theme="dark"] .lamp-glow { opacity: 0; }
+.lamp-hint {
+  position: absolute; top: calc(100% + 5px); right: 0; white-space: nowrap;
+  padding: 5px 8px; border: 1px solid var(--soft-line); border-radius: 4px;
+  background: var(--panel); color: var(--ink); font: 400 12px/1.3 var(--sans);
+  opacity: 0; pointer-events: none; transition: opacity 120ms;
+}
+.reading-lamp:is(:hover,:focus-visible) .lamp-hint { opacity: 1; }
+.reading-lamp:is(.pulling, .tugging) .lamp-hint { opacity: 0; }
+#lobbyTheme.reading-lamp { display: inline-flex; width: 56px; height: 56px; padding: 0; border: 0; }
+.topbar > .reading-lamp { margin-inline-start: 12px; }
+@media (max-width: 720px) {
+  html.reader-clarity .topbar .slider-wrap { flex: 1 1 calc(100% - 200px); }
+  .topbar > .reading-lamp { margin-inline-start: 0; order: 1; flex-basis: 44px; width: 44px; height: 44px; }
+  .topbar > .reading-lamp .lamp-drawing { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-lamp .lamp-cord { transform: none; transition: none; }
+  .reading-lamp .lamp-string-extension { display: none; }
+  .reading-lamp .lamp-hint, .lamp-shade, .lamp-glow { transition: none; }
+}

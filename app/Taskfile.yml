@@ -1,0 +1,75 @@
+version: "3"
+
+# Loads FIREBASE_PROJECT_ID (and optional FIREBASE_HOSTING_SITE / FIREBASE_TOKEN) from .env.
+dotenv: [".env"]
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  install:
+    desc: Install dependencies
+    cmds:
+      - npm ci
+
+  typecheck:
+    desc: Type-check the app and server
+    cmds:
+      - npm run typecheck
+
+  dev:
+    desc: Run the dev server with live reload — open the http://localhost:5173 URL it prints
+    cmds:
+      - cmd: npm run dev:web
+        interactive: true
+
+  dev:full:
+    desc: Dev app (Vite :5173) and local static server (Node :4173)
+    cmds:
+      - cmd: npm run dev
+        interactive: true
+
+  build:
+    desc: Build the static site to dist/public
+    cmds:
+      - npm run build:static
+
+  serve:
+    desc: Build and serve the production build locally (dist/public on http://localhost:4173)
+    cmds:
+      - npm run build
+      - cmd: npm run start
+        interactive: true
+
+  login:
+    desc: Sign in to Firebase (one-time, opens your browser)
+    cmds:
+      - cmd: npx --yes firebase-tools login
+        interactive: true
+
+  deploy:
+    desc: Build the static site and deploy it to Firebase Hosting
+    cmds:
+      - task: build
+      - |
+        : "${FIREBASE_PROJECT_ID:?Set FIREBASE_PROJECT_ID in .env}"
+        ONLY="hosting"
+        [ -n "${FIREBASE_HOSTING_SITE:-}" ] && ONLY="hosting:${FIREBASE_HOSTING_SITE}"
+        set -- deploy --only "$ONLY" --project "$FIREBASE_PROJECT_ID" --non-interactive
+        [ -n "${FIREBASE_TOKEN:-}" ] && set -- "$@" --token "$FIREBASE_TOKEN"
+        echo "→ Deploying to Firebase project: $FIREBASE_PROJECT_ID"
+        npx --yes firebase-tools "$@"
+      - echo "✓ Deployed → https://${FIREBASE_HOSTING_SITE:-$FIREBASE_PROJECT_ID}.web.app"
+
+  clean:
+    desc: Remove the build output
+    cmds:
+      - rm -rf dist
+
+  greeting:
+    desc: Record the sample locally with Kokoro voices
+    cmds:
+      - npm run greeting

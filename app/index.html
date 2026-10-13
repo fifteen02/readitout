@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en" class="reader-clarity">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Read It Out</title>
+  <link rel="icon" type="image/png" href="/readitout-mark.png">
+  <!-- Google Analytics (GA4), hosted site only. A self-hosted build never loads
+       gtag.js and never contacts Google — the gate below is the whole mechanism, so
+       removing analytics from a fork means deleting this block and nothing else.
+       The measurement ID is a public identifier by design; the events that get sent
+       are listed in the README and live in src/analytics.ts. -->
+  <script>
+    (function () {
+      var hosted = location.hostname === "readitout.me" || location.hostname === "www.readitout.me";
+      if (!hosted) return;
+      var id = "G-SLGNQ8MPZS";
+      var tag = document.createElement("script");
+      tag.async = true;
+      tag.src = "https://www.googletagmanager.com/gtag/js?id=" + id;
+      document.head.appendChild(tag);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { window.dataLayer.push(arguments); };
+      window.gtag("js", new Date());
+      window.gtag("config", id);
+    })();
+  </script>
+  <!-- Hide the page until the app is styled + set up, then fade in (prevents a
+       flash of unstyled content while Vite/CSS and the module load). -->
+  <style>body { opacity: 0; } html.app-ready body { opacity: 1; transition: opacity .2s ease; }</style>
+  <script>
+    // Resolve appearance before first paint to avoid a flash. Stored preference
+    // is Day or Night. Older Auto preferences resolve once on first load.
+    (function () {
+      try {
+        var pref = localStorage.getItem("readitout:appearance");
+        var oldScheme = localStorage.getItem("readitout:scheme");
+        var dark = pref === "dark" || (pref !== "light" && (oldScheme ? oldScheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches));
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.dataset.preset = "book";
+        // Paint the backdrop in the resolved theme's paper colour so the pre-load frame isn't a white flash.
+        document.documentElement.style.backgroundColor = dark ? "var(--reading, #261d23)" : "var(--reading, #f1eee6)";
+      } catch (e) { document.documentElement.dataset.theme = "dark"; document.documentElement.dataset.preset = "book"; document.documentElement.style.backgroundColor = "var(--reading, #261d23)"; }
+      // Safety net: reveal on full load even if the app module is slow or errors.
+      window.addEventListener("load", function () { document.documentElement.classList.add("app-ready"); });
+    })();
+  </script>
+</head>
+<body>
+  <div class="app no-doc" id="app">
+    <div class="resize-handle resize-left" data-edge="left"></div>
+    <div class="resize-handle resize-right" data-edge="right" data-side="left"></div>
+    <aside class="left">
+      <nav id="dropZone" class="rail-icons" aria-label="Tools">
+        <a class="rail-logo" id="readerHome" href="/" title="Back to home" aria-label="Read It Out — home">
+          <span class="reader-wordmark logo-literary" role="img" aria-label="Read It Out"><span aria-hidden="true">Read it</span><span class="logo-out" aria-hidden="true">out</span></span>
+          <svg class="brand-mark" width="32" height="32" viewBox="0 0 64 64">
+            <rect class="bm-tile" x="2" y="2" width="60" height="60" rx="15"/>
+            <rect x="12" y="15" width="40" height="28" rx="9" fill="#fbf6ee"/>
+            <path d="M20 41 h11 l-10 10 z" fill="#fbf6ee"/>
+            <g class="bm-bars">
+              <rect x="19" y="29" width="3" height="6" rx="1.5"/><rect x="25" y="25" width="3" height="14" rx="1.5"/><rect x="31" y="22" width="3" height="20" rx="1.5"/><rect x="37" y="25" width="3" height="14" rx="1.5"/><rect x="43" y="29" width="3" height="6" rx="1.5"/>
+            </g>
+          </svg>
+        </a>
+        <h1 class="rail-fill" id="readerTitle"></h1>
+        <button id="railSettings" class="rail-ico" type="button" data-panel="settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </nav>
+    </aside>
+    <input id="pdfInput" type="file" accept="application/pdf,.pdf" hidden>
+    <p id="status" class="sr-only" role="status">Choose a PDF to begin.</p>
+    <div class="rail-flyout" id="railFlyout" data-panel="settings" role="region" aria-labelledby="flyoutTitle">
+      <div class="flyout-head">
+        <span class="flyout-title" id="flyoutTitle">Settings</span>
+        <button class="flyout-close" id="railFlyoutClose" type="button" aria-label="Close settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+
+      <nav class="settings-sections" aria-label="Settings sections">
+        <button type="button" data-settings-panel="settings" aria-pressed="true" aria-controls="settingsGeneral">Page</button>
+        <button type="button" data-settings-panel="listen" aria-pressed="false" aria-controls="settingsReading">Voice</button>
+        <button type="button" data-settings-panel="annotate" aria-pressed="false" aria-controls="settingsAnnotations">Notes</button>
+        <button type="button" data-settings-panel="timer" aria-pressed="false" aria-controls="settingsTimer">Timer</button>
+      </nav>
+
+      <div class="settings-body">
+      <section class="rail-panel" id="settingsAnnotations" data-panel="annotate" aria-labelledby="settingsAnnotationsTitle">
+      <h2 id="settingsAnnotationsTitle">Notes</h2>
+      <div id="mobileNotesSlot" class="mobile-notes-slot"></div>
+      <div class="create-tools"><p class="annotation-help">Select text, choose a colour, then press Enter to highlight it. Choose <b>Add note</b> to write feedback.</p>
+        <button id="highlightMode" class="primary" type="button">Highlight</button>
+        <label class="ct-color-label">Highlight color</label>
+        <div class="swatches" id="annoColor">
+          <button type="button" class="swatch active" data-color="#ffd240" style="--swatch:#ffd240" aria-label="Yellow"></button>
+          <button type="button" class="swatch" data-color="#72d6a3" style="--swatch:#72d6a3" aria-label="Green"></button>
+          <button type="button" class="swatch" data-color="#7db7ff" style="--swatch:#7db7ff" aria-label="Blue"></button>
+          <button type="button" class="swatch" data-color="#ff8f8a" style="--swatch:#ff8f8a" aria-label="Red"></button>
+          <button type="button" class="swatch" data-color="#f6a6ff" style="--swatch:#f6a6ff" aria-label="Pink"></button>
+          <button type="button" class="swatch" data-color="#b99cff" style="--swatch:#b99cff" aria-label="Purple"></button>
+          <button type="button" class="swatch" data-color="#7ee7e1" style="--swatch:#7ee7e1" aria-label="Cyan"></button>
+          <button type="button" class="swatch" data-color="#ffbd66" style="--swatch:#ffbd66" aria-label="Orange"></button>
+          <button type="button" class="swatch" data-color="#c6d36f" style="--swatch:#c6d36f" aria-label="Olive"></button>
+          <button type="button" class="swatch" data-color="#c9b7a2" style="--swatch:#c9b7a2" aria-label="Taupe"></button>
+        </div>
+      </div>
+      <!-- legacy inline editor retained for compatibility; editing now happens in the modal -->
+      <label for="noteText" class="legacy-editor">Selected annotation text</label>
+      <textarea id="noteText" class="legacy-editor" placeholder="Draw a highlight or note area, then type here." disabled></textarea>
+      <button id="deleteAnno" class="warn legacy-editor" type="button" disabled>Delete selected</button>
+      </section>
+
+      <section class="rail-panel" id="settingsReading" data-panel="listen" aria-labelledby="settingsReadingTitle">
+      <h2 id="settingsReadingTitle">Voice</h2>
+      <div class="settings-voice-controls">
+        <label for="voiceSelect">Voice</label>
+        <select id="voiceSelect"><option value="af_heart">Heart · US</option></select>
+        <button id="voicePreview" class="preview-voice" type="button"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:6px"><path d="M8 5.1v13.8a1 1 0 0 0 1.53.85l11-6.9a1 1 0 0 0 0-1.7l-11-6.9A1 1 0 0 0 8 5.1Z"/></svg>Preview voice</button>
+        <label for="rate">Reading speed <span id="rateValue">1.0</span>x</label>
+        <input id="rate" type="range" min="0.6" max="1.6" step="0.1" value="1">
+        <p id="voiceEngineHint" class="field-hint">Your reading voice runs on this device. Saved voice files are reused when available.</p>
+      </div>
+      <details class="drawer" open>
+        <summary>Voice on this device</summary>
+        <div id="kokoroSetup">
+          <p class="field-hint">Our reading voice runs privately on your device.</p>
+          <p class="field-hint">About 120 MB on first download. Your browser keeps the files when storage permits. Reading may be slower on older devices.</p>
+          <button id="kokoroDownload" type="button">Download reading voice</button>
+          <button id="kokoroCancel" type="button" hidden>Cancel download</button>
+          <p id="kokoroStatus" class="field-hint" role="status" aria-live="polite">Download the voice once to read on this device.</p>
+        </div>
+      </details>
+      <details class="drawer">
+        <summary>Playback options</summary>
+      <div class="toolbar">
+        <div class="row">
+          <button id="readPage" class="primary" type="button" disabled>Read page</button>
+          <button id="readAll" type="button" disabled>Read all</button>
+        </div>
+        <button id="gotoRead" type="button" disabled>Current reading</button>
+        <div class="row three">
+          <button id="pauseRead" type="button" disabled>Pause</button>
+          <button id="resumeRead" type="button" disabled>Resume</button>
+          <button id="stopRead" type="button" disabled>Stop</button>
+        </div>
+      </div>
+      </details>
+      </section>
+
+      <section class="rail-panel show" id="settingsGeneral" data-panel="settings" aria-labelledby="settingsGeneralTitle">
+      <h2 id="settingsGeneralTitle">Page</h2>
+      <div id="readerDisplaySettings" class="reader-display-settings">
+            <div id="mobilePagePosition" class="field-group mobile-page-position"><span class="field-cap">Page position</span></div>
+            <details class="drawer" id="tocDrawer" hidden>
+              <summary>Contents</summary>
+              <div id="tocList" class="toc-list"></div>
+            </details>
+            <div class="field-group">
+              <span class="field-cap">Appearance</span>
+              <div class="segmented" id="appearanceTabs" aria-label="App appearance">
+                <button type="button" data-appearance="light" title="Day">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg><span>Day</span>
+                </button>
+                <button type="button" data-appearance="dark" title="Night">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.8A8.2 8.2 0 1 1 9.2 3.5a6.4 6.4 0 0 0 11.3 11.3Z"/></svg><span>Night</span>
+                </button>
+              </div>
+            </div>
+            <div class="field-group">
+              <span class="field-cap">Zoom</span>
+              <div class="zoom-controls">
+                <button id="zoomOut" type="button" aria-label="Zoom out">–</button>
+                <select id="zoom" aria-label="Zoom level">
+                  <option value="fit-width" selected>Fit width</option>
+                  <option value="fit-page">Fit page</option>
+                  <option value="0.9">90%</option>
+                  <option value="1.15">115%</option>
+                  <option value="1.4">140%</option>
+                  <option value="1.8">180%</option>
+                  <option value="2.2">220%</option>
+                </select>
+                <button id="zoomIn" type="button" aria-label="Zoom in">+</button>
+              </div>
+            </div>
+      </div>
+      </section>
+      <section class="rail-panel" id="settingsTimer" data-panel="timer" aria-labelledby="settingsTimerTitle">
+      <h2 id="settingsTimerTitle">Timer</h2>
+      <p class="settings-intro">Set the rhythm for a reading session.</p>
+      <label for="pomoSound">Timer sound</label>
+      <div class="row">
+        <select id="pomoSound" aria-label="Timer sound">
+          <option value="chime">Chime</option>
+          <option value="bell">Bell</option>
+          <option value="marimba">Marimba</option>
+          <option value="off">Silent</option>
+        </select>
+        <button id="pomoSoundPreview" type="button">Preview</button>
+      </div>
+      <p class="field-hint">Plays when a focus or break session ends.</p>
+      <label>Timer intervals (minutes)</label>
+      <div class="pomo-intervals">
+        <div class="field-group">
+          <span class="field-cap">Focus</span>
+          <input type="number" id="pomoFocusMin" min="1" max="180" step="1" value="25" inputmode="numeric" aria-label="Focus minutes">
+        </div>
+        <div class="field-group">
+          <span class="field-cap">Break</span>
+          <input type="number" id="pomoBreakMin" min="1" max="90" step="1" placeholder="auto" inputmode="numeric" aria-label="Break minutes" aria-describedby="pomoIntervalHint">
+        </div>
+      </div>
+      <p class="field-hint" id="pomoIntervalHint">Leave Break empty for an automatic break: about one minute for every five minutes of focus, with a three-minute minimum.</p>
+
+      </section>
+      </div>
+    </div>
+
+    <main>
+      <div class="welcome" id="welcome">
+        <header class="lobby-header">
+          <span class="welcome-word logo-literary" role="img" aria-label="Read It Out"><span aria-hidden="true">Read it</span><span class="logo-out" aria-hidden="true">out</span></span>
+          <button class="reading-lamp" id="lobbyTheme" data-reading-lamp type="button" aria-label="Reading light" aria-pressed="true"></button>
+        </header>
+        <div class="welcome-card">
+          <div class="welcome-hero">
+            <img class="lobby-reading-nook" src="/illustrations/reading-doorway-watercolour.webp" width="1024" height="1536" alt="" aria-hidden="true" decoding="async">
+            <div class="welcome-copy">
+              <h1 class="welcome-title">A little distance from your own words.</h1>
+              <p class="welcome-sub">Hear your draft. Catch what your eyes skip.</p>
+              <div class="welcome-cta">
+                <button id="welcomeOpen" class="welcome-open primary" type="button" aria-label="Open your PDF" aria-describedby="welcomeOpenHint"><svg class="open-manuscript-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="book-leaf book-leaf-left"><path d="M12 6c-2.6-2-5.6-2.3-9-1.5v14c3.4-.8 6.4-.5 9 1.5Z"/><path class="book-lines" d="M6 8l3 .5M6 11l3 .5"/></g><g class="book-leaf book-leaf-right"><path d="M12 6c2.6-2 5.6-2.3 9-1.5v14c-3.4-.8-6.4-.5-9 1.5Z"/><path class="book-lines" d="M15 8.5l3-.5M15 11.5l3-.5"/></g><g class="book-turning-pages"><path d="M12 6c2.6-2 5.6-2.3 9-1.5v14c-3.4-.8-6.4-.5-9 1.5Z"/><path d="M12 6c2.6-2 5.6-2.3 9-1.5v14c-3.4-.8-6.4-.5-9 1.5Z"/></g><path d="M12 6v14"/></svg><span class="welcome-open-label"><strong>Open your PDF</strong><small id="welcomeOpenHint">Choose a file to begin</small></span></button>
+              </div>
+
+          <section class="maker-note" aria-labelledby="makerTitle">
+            <h2 id="makerTitle">Why I made this</h2>
+            <p>After a few rereads of my own book, I knew the words too well. My attention drifted, and I missed details.</p>
+            <p>I wanted to hear the draft aloud and keep notes beside the passages I needed to revisit. That’s why I built Read It Out.</p>
+          </section>
+
+              <div class="lobby-schemes" id="lobbySchemes" hidden role="group" aria-label="Reading color scheme">
+                <span class="ls-cap">Paper</span>
+                <button type="button" class="scheme-dot normal active" data-theme="normal" title="Light" aria-label="Light"></button>
+                <button type="button" class="scheme-dot sepia" data-theme="sepia" title="Sepia" aria-label="Sepia"></button>
+                <button type="button" class="scheme-dot dark" data-theme="dark" title="Dark" aria-label="Dark"></button>
+              </div>
+            </div>
+            <div class="welcome-demo">
+              <div class="intro-player" id="introPlayer">
+                <div class="lobby-book" id="lobbyBook">
+                <div class="ip-doc scheme-normal" id="introDoc" role="region" aria-label="Sample book page" tabindex="0">
+                  <div class="ip-doc-page" id="introPage">
+                    <h2 class="ip-title">The Quiet Hour <span>· sample</span></h2>
+                    <p class="ip-chapter">Chapter One</p>
+                    <div class="ip-text-window" id="introTextWindow"><div class="ip-text" id="introText"><p>The lighthouse had been dark for eleven years before Mira decided it was her problem. She had walked past it every morning of that time, and every morning it had looked back at her with the same patient indifference, and somewhere in the eleventh winter the arrangement stopped feeling neutral.</p><p>Her father would have called this a symptom. He had a whole vocabulary for the things people did instead of sleeping, instead of eating, instead of speaking to one another about the thing that had actually happened. Mira had inherited the vocabulary and almost none of the discipline that was supposed to come with it.</p></div></div>
+                    <p class="ip-example-note"><span>Example note</span> Is she more like her father than she thinks?</p>
+                    <span class="ip-page-number" aria-label="Page 1">1</span>
+                    <nav class="sample-pages" aria-label="Sample pages"><button id="samplePrevious" type="button" aria-label="Previous sample page"></button><span id="samplePageNumber" role="status"></span><button id="sampleNext" type="button" aria-label="Next sample page"></button></nav>
+                  </div>
+                </div>
+                  <button class="lobby-book-cover" id="lobbyBookOpen" type="button" aria-label="Open the sample book" hidden>
+                    <span class="lobby-cover-front"><span class="lobby-cover-titling"><span class="lobby-cover-title">The Quiet<br>Hour</span><span class="lobby-cover-rule"></span><span class="lobby-cover-subtitle">A reading sample</span></span><span class="lobby-cover-invite">Open the book</span></span>
+                    <span class="lobby-cover-inside" aria-hidden="true"><span>The Quiet Hour</span><span class="lobby-cover-rule"></span><small>Read It Out · sample</small></span>
+                  </button>
+                </div>
+                  <div class="ip-doc-bar">
+                    <button class="ip-play" id="introPlay" type="button" aria-label="Play the example" disabled>
+                      <svg class="ip-i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.1v13.8a1 1 0 0 0 1.53.85l11-6.9a1 1 0 0 0 0-1.7l-11-6.9A1 1 0 0 0 8 5.1Z"/></svg>
+                      <svg class="ip-i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1.3"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.3"/></svg>
+                    </button>
+                    <span id="introElapsed" class="ip-time">0:00</span>
+                    <input id="introSeek" type="range" min="0" max="1" step="0.01" value="0" aria-label="Example playback position" disabled>
+                    <span id="introDuration" class="ip-time">—</span>
+                  </div>
+                  <div class="ip-player-footer">
+                    <label for="introVoice">Voice</label>
+                    <select class="ip-voice" id="introVoice" aria-label="Example voice" disabled></select>
+                    <span id="introStatus" role="status">Loading the example…</span>
+                  </div>
+              </div>
+              <div class="lobby-book-actions"><button id="lobbyBookReplay" class="sample-open" type="button" hidden>Close the book</button><button id="welcomeSample" class="sample-open" type="button"><span class="sample-label-wide">Open the sample manuscript</span><span class="sample-label-small">Try the sample</span></button></div>
+            </div>
+          </div>
+
+        </div>
+        <footer class="lobby-footer">
+          <a id="sponsor" href="https://fifteen02.com" target="_blank" rel="noopener">Made by fifteen02</a>
+          <p class="lobby-colophon"><span>Free &amp; open source</span><small>No account needed</small></p>
+          <a class="lobby-github" href="https://github.com/fifteen02/readitout" target="_blank" rel="noopener" aria-label="Open source on GitHub" title="Open source on GitHub">
+            <svg class="desk-icon" viewBox="0 0 56 56" width="44" height="44" aria-hidden="true" focusable="false">
+              <circle class="di-metal" cx="28" cy="28" r="22"/>
+              <circle class="di-light" cx="28" cy="28" r="18.5"/>
+              <path class="github-mark" transform="translate(13 13) scale(1.25)" d="M12 .297C5.37.297 0 5.67 0 12.297c0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.043-1.61-4.043-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.835 2.807 1.305 3.492.998.108-.776.418-1.305.762-1.605-2.665-.304-5.467-1.334-5.467-5.931 0-1.31.469-2.381 1.236-3.221-.124-.303-.536-1.524.117-3.176 0 0 1.008-.323 3.301 1.23a11.52 11.52 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.553 3.297-1.23 3.297-1.23.655 1.652.243 2.873.12 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.015 2.898-.015 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.595 24 12.297c0-6.627-5.373-12-12-12"/>
+            </svg>
+          </a>
+        </footer>
+      </div>
+      <div class="topbar">
+        <span id="currentSection" class="current-section" title="Current section" hidden></span>
+        <div class="page-controls">
+          <button id="prevPage" class="page-nav" type="button" disabled aria-label="Previous page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <span class="page-caption" aria-hidden="true">Page</span><span id="pageLabel" class="status">0 / 0</span>
+          <button id="nextPage" class="page-nav" type="button" disabled aria-label="Next page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <div class="slider-wrap">
+          <input id="pageSlider" type="range" min="1" max="1" value="1" aria-label="Page" title="Drag to change page" aria-describedby="pageTrackHelp" disabled>
+          <div class="slider-marks" id="sliderMarks" aria-hidden="true"></div>
+          <div class="slider-segs" id="sliderSegs" aria-label="Chapter sections"></div>
+          <span id="pageTrackHelp" class="page-track-help">Drag the brass knob to change page.</span>
+          <button id="bookmarkMark" class="bookmark-mark" type="button" title="Last reading position — click to jump" hidden></button>
+        </div>
+        <div class="pomodoro tea-timer" id="pomodoro">
+          <button id="teaTimer" class="tea-timer-trigger" type="button" aria-label="Tea timer, 25 minutes. Open timer controls" aria-expanded="false" aria-controls="teaControls">
+            <svg class="tea-mobile-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6M12 2v3"/></svg>
+            <svg class="tea-cup" viewBox="0 0 80 72" fill="none" aria-hidden="true">
+              <defs>
+                <clipPath id="teaBowl"><path d="M15 25h43l-4 25c-1 8-7 11-17.5 11S20 58 19 50z"/></clipPath>
+                <radialGradient id="teaContactShadow"><stop stop-color="var(--ink)" stop-opacity=".25"/><stop offset="1" stop-color="var(--ink)" stop-opacity="0"/></radialGradient>
+              </defs>
+              <ellipse cx="37" cy="66" rx="27" ry="3.5" fill="url(#teaContactShadow)"/>
+              <path class="tea-saucer-edge" d="M11 62.5c2 6 50 6 52 0"/>
+              <ellipse class="tea-saucer" cx="37" cy="62.5" rx="26" ry="3.5"/>
+              <ellipse class="tea-saucer-well" cx="37" cy="62" rx="16" ry="1.8"/>
+              <g class="tea-vessel">
+                <path class="tea-handle" d="M57 29c24-8 23 20-3 21"/>
+                <path class="tea-handle-light" d="M60 29c18-4 17 14-3 18"/>
+                <path class="tea-glass" d="M15 25h43l-4 25c-1 8-7 11-17.5 11S20 58 19 50z"/>
+                <g clip-path="url(#teaBowl)">
+                  <g class="tea-fill"><rect x="14" y="29" width="45" height="33"/></g>
+                  <ellipse class="tea-surface" cx="36.5" cy="29" rx="21.5" ry="4.5"/>
+                  <path class="tea-glass-reflection" d="M18 27h7l4 34h-7z"/>
+                </g>
+                <path class="tea-outline" d="M15 25l4 25c1 8 7 11 17.5 11S53 58 54 50l4-25"/>
+                <ellipse class="tea-rim" cx="36.5" cy="25" rx="21.5" ry="4.5"/>
+                <path class="tea-rim-light" d="M15.5 25c0 5.5 41 5.5 42 0"/>
+                <path class="tea-shine" d="m21 33 1.5 12"/>
+                <path class="tea-steam" d="M29 22c-5-4-5-7-1-10s4-6 1-9"/>
+                <path class="tea-steam tea-steam-second" d="M42 22c4-4 4-7 0-10s-3-6 0-9"/>
+              </g>
+            </svg>
+            <span id="teaCaption">Tea timer</span>
+          </button>
+          <div class="tea-controls" id="teaControls" role="region" aria-label="Tea timer controls" hidden>
+          <div class="tea-controls-head"><h2>Tea timer</h2><button id="teaClose" type="button" aria-label="Close timer controls"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+          <p class="tea-hint">Set aside time to read, then take a break. Listening stays under your control.</p>
+          <div class="tea-controls-row">
+          <div class="pomo-clock">
+            <span id="pomoLabel" class="pomo-label">Focus timer</span>
+            <span id="pomoTime" class="pomo-time">25:00</span>
+          </div>
+          <label class="pomo-duration"><span>Length</span>
+            <select id="pomoLength" aria-label="Focus session length">
+              <option value="1">1 min</option>
+              <option value="15">15 min</option>
+              <option value="25" selected>25 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+              <option value="custom" hidden>Custom</option>
+            </select>
+          </label>
+          <button id="pomoToggle" class="tbtn" type="button" aria-label="Start focus timer">Start</button>
+          <button id="pomoReset" class="tbtn ghost" type="button" aria-label="Reset timer" title="Reset"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/></svg></button>
+          </div>
+          </div>
+          <p id="teaAnnouncement" class="sr-only" role="status" aria-live="polite"></p>
+        </div>
+        <button class="reading-lamp" id="readerLamp" data-reading-lamp type="button" aria-label="Reading light" aria-pressed="true"></button>
+      </div>
+      <div class="loader" id="loader" hidden>
+        <div class="spinner"></div>
+        <span id="loaderText">Loading…</span>
+      </div>
+      <div class="viewer" id="viewer">
+        <div class="pages" id="pages">
+          <div class="empty">Open a PDF. Drag on the page to create highlights.</div>
+        </div>
+      </div>
+      <div id="minimap" hidden aria-hidden="true"></div>
+      <div class="readerbar" role="group" aria-label="Reading playback">
+        <div class="player-zone pz-left">
+          <div class="voice-group" id="voiceGroup">
+            <select id="playerVoice" class="player-voice" aria-label="Reader voice"><option value="af_heart">Heart · US</option></select>
+          </div>
+        </div>
+        <div class="player-transport">
+          <button id="playerPrev" class="tbtn" type="button" disabled aria-label="Previous paragraph" title="Previous paragraph (←)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="5.2" y="5.4" width="2.3" height="13.2" rx="1.15"/><path d="M18.5 6.1a1 1 0 0 0-1.56-.83l-8 5.5a1 1 0 0 0 0 1.65l8 5.5a1 1 0 0 0 1.56-.83Z"/></svg></button>
+          <button id="playerPlay" class="tbtn play primary" type="button" disabled aria-label="Listen to your draft" title="Listen (Space)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 5-6 4H2v6h3l6 4V5Z"/><path d="M15.5 8a6 6 0 0 1 0 8M19 4.5a11 11 0 0 1 0 15"/></svg></button>
+          <button id="playerNext" class="tbtn" type="button" disabled aria-label="Next paragraph" title="Next paragraph (→)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="16.5" y="5.4" width="2.3" height="13.2" rx="1.15"/><path d="M5.5 6.1a1 1 0 0 1 1.56-.83l8 5.5a1 1 0 0 1 0 1.65l-8 5.5a1 1 0 0 1-1.56-.83Z"/></svg></button>
+          <button id="playerGoto" class="tbtn ghost" type="button" disabled aria-label="Show current spoken passage" title="Show current spoken passage"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 6 6v5"/></svg></button>
+        </div>
+        <div class="player-zone pz-right">
+          <div class="speed-controls">
+          <span id="playerRateValue" class="status">1.0x</span>
+          <input id="playerRate" type="range" min="0.6" max="1.6" step="0.1" value="1" aria-label="Reader speed">
+          </div>
+          <button id="focusToggle" class="tbtn ghost" type="button" aria-label="Focus controls" title="Focus line — highlight one line at a time (F). ↑/↓ to move, click a line, D to dim the page.">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5H4v4M17 5h3v4M4 15v4h3M20 15v4h-3M8 12h8"/></svg>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <button id="readerNotes" class="notes-edge-tab" type="button" aria-expanded="false" aria-controls="notesPanel">Notes</button>
+    <aside class="right" id="notesPanel" aria-label="Notes">
+      <button id="annoTab" class="anno-tab" type="button" title="Show annotations">‹ Annotations</button>
+      <button id="toggleAnnoPanel" class="rail-toggle" type="button" title="Close notes" aria-label="Close notes"><span>Close</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      <p class="panel-hint">Choose a passage to find it on the page. Use Edit note to change its feedback.</p>
+      <div class="anno-filter">
+        <div class="notes-search-row">
+          <input id="annoSearch" type="search" placeholder="Search notes…" aria-label="Search notes">
+          <button id="notesOrganiseToggle" type="button" popovertarget="notesOrganisePopover" aria-haspopup="dialog" aria-expanded="false" aria-controls="notesOrganisePopover" aria-label="Organise notes" title="Organise notes"></button>
+        </div>
+        <div id="annoFilterColors" class="anno-filter-colors" role="group" aria-label="Filter by colour"></div>
+      </div>
+      <section id="notesOrganisePopover" class="notes-actions-popover notes-organise-popover" popover="auto" role="dialog" aria-labelledby="notesOrganiseTitle">
+        <header class="notes-actions-head">
+          <h2 id="notesOrganiseTitle">Organise notes</h2>
+          <button id="notesOrganiseClose" type="button" popovertarget="notesOrganisePopover" popovertargetaction="hide" aria-label="Close organisation tools" autofocus></button>
+        </header>
+        <label class="notes-group-label" for="annoGroupBy">Group notes</label>
+        <select id="annoGroupBy" class="anno-groupby" title="Group notes by document outline">
+          <option value="none">No grouping</option>
+          <option value="0" selected>By section</option>
+          <option value="1">By subsection</option>
+        </select>
+        <div class="notes-completion-tools">
+          <label class="done-all"><input type="checkbox" id="doneAll"> <span>Resolve all notes</span></label>
+          <button id="deleteDone" class="delete-done" type="button" hidden>Delete done</button>
+        </div>
+      </section>
+      <div id="annoList" aria-live="polite"></div>
+      <div class="anno-actions">
+        <button id="notesActionsToggle" type="button" popovertarget="notesActionsPopover" aria-haspopup="dialog" aria-expanded="false" aria-controls="notesActionsPopover">Export &amp; backup</button>
+        <section id="notesActionsPopover" class="notes-actions-popover" popover="auto" role="dialog" aria-labelledby="notesActionsTitle">
+          <header class="notes-actions-head">
+            <h2 id="notesActionsTitle">Export &amp; backup</h2>
+            <button id="notesActionsClose" type="button" popovertarget="notesActionsPopover" popovertargetaction="hide" aria-label="Close notes tools" autofocus></button>
+          </header>
+          <p class="notes-storage">Notes are saved in this browser for this PDF.</p>
+          <div class="notes-export-actions">
+            <button id="copyNotes" type="button" disabled title="Copy all notes, passages and completion states">Copy notes</button>
+            <button id="exportMarkdown" type="button" disabled title="Download all notes as readable Markdown">Download notes</button>
+            <button id="copyReviewBrief" type="button" disabled title="Copy open notes, passages and context with review instructions">Copy review brief</button>
+          </div>
+          <div class="notes-backup-actions">
+            <button id="exportAnno" type="button" disabled title="Download a backup that can be imported for this PDF">Back up notes</button>
+            <button id="importAnnoButton" type="button" disabled title="Import a notes backup for this PDF">Import backup</button>
+          </div>
+        </section>
+        <input id="importAnno" type="file" accept="application/json,.json" hidden>
+      </div>
+    </aside>
+  </div>
+
+  <dialog id="teaComplete" class="tea-complete" aria-labelledby="teaCompleteTitle" aria-describedby="teaCompleteDescription">
+    <h2 id="teaCompleteTitle" tabindex="-1">Break complete</h2>
+    <p id="teaCompleteDescription"></p>
+    <div class="tea-complete-actions">
+      <button id="teaCompleteLater" type="button">Not now</button>
+      <button id="teaCompleteStart" class="primary" type="button">Start reading timer</button>
+    </div>
+  </dialog>
+
+  <div class="quick-note" id="quickNote" hidden>
+    <span class="quick-note-hint">Note for the current line</span>
+    <input id="quickNoteInput" type="text" autocomplete="off" placeholder="Type and press Enter to add · Esc to cancel">
+  </div>
+
+  <div class="cmdk" id="cmdk" hidden>
+    <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div class="cmdk-search">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input id="cmdkInput" type="text" autocomplete="off" spellcheck="false" placeholder="Search actions, or type a page number…" aria-label="Command palette search" role="combobox" aria-autocomplete="list" aria-controls="cmdkList" aria-expanded="false">
+        <span class="cmdk-esc">esc</span>
+      </div>
+      <div class="cmdk-list" id="cmdkList" role="listbox" aria-label="Commands"></div>
+    </div>
+  </div>
+
+  <div class="coachmark" id="coachmark" hidden>
+    <strong>Quick start</strong>
+    <ul>
+      <li>Choose the <b>headphones</b> to hear your draft aloud.</li>
+      <li>Open <b>Focus</b> to follow one line or dim the surrounding text.</li>
+      <li><b>Select text</b> on the page to highlight or add a note.</li>
+    </ul>
+    <button id="coachmarkDismiss" class="primary" type="button">Got it</button>
+  </div>
+
+  <div class="modal-overlay" id="annoModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="annoModalTitle">
+      <header class="modal-head">
+        <h3 id="annoModalTitle">Note</h3>
+        <span class="modal-context"><span class="modal-dot" id="annoModalDot" aria-hidden="true"></span><span class="modal-meta" id="annoModalMeta">Page —</span></span>
+        <button id="annoModalClose" class="modal-x" type="button" aria-label="Close note">×</button>
+      </header>
+      <blockquote class="modal-quote" id="annoModalQuote" tabindex="0" aria-label="Selected passage" hidden></blockquote>
+      <div class="modal-notes">
+        <label class="field-cap" for="modalNoteText">Your note</label>
+        <textarea id="modalNoteText" placeholder="What would you like to revisit?"></textarea>
+      </div>
+      <details class="modal-options">
+        <summary>Highlight &amp; tags</summary>
+      <span class="field-cap">Colour</span>
+      <div class="swatches" id="modalColor">
+        <button type="button" class="swatch" data-color="#ffd240" style="--swatch:#ffd240" aria-label="Yellow"></button>
+        <button type="button" class="swatch" data-color="#72d6a3" style="--swatch:#72d6a3" aria-label="Green"></button>
+        <button type="button" class="swatch" data-color="#7db7ff" style="--swatch:#7db7ff" aria-label="Blue"></button>
+        <button type="button" class="swatch" data-color="#ff8f8a" style="--swatch:#ff8f8a" aria-label="Red"></button>
+        <button type="button" class="swatch" data-color="#f6a6ff" style="--swatch:#f6a6ff" aria-label="Pink"></button>
+        <button type="button" class="swatch" data-color="#b99cff" style="--swatch:#b99cff" aria-label="Purple"></button>
+        <button type="button" class="swatch" data-color="#7ee7e1" style="--swatch:#7ee7e1" aria-label="Cyan"></button>
+        <button type="button" class="swatch" data-color="#ffbd66" style="--swatch:#ffbd66" aria-label="Orange"></button>
+        <button type="button" class="swatch" data-color="#c6d36f" style="--swatch:#c6d36f" aria-label="Olive"></button>
+        <button type="button" class="swatch" data-color="#c9b7a2" style="--swatch:#c9b7a2" aria-label="Taupe"></button>
+      </div>
+        <label class="field-cap" for="modalTags">Tags <span class="field-optional">(optional)</span></label>
+        <input id="modalTags" type="text" placeholder="question, todo, key" aria-describedby="modalTagsHint">
+        <p id="modalTagsHint" class="modal-field-hint">Separate tags with commas.</p>
+        <div id="modalTagSuggest" class="tag-suggest"></div>
+      </details>
+      <p class="note-save-hint">Changes save in this browser for this PDF.</p>
+      <footer class="modal-foot">
+        <button id="modalDelete" class="warn" type="button">Delete note</button>
+        <button id="modalSave" class="primary" type="button">Done</button>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

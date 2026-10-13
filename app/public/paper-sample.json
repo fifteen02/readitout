@@ -1,0 +1,82 @@
+{
+  "title": "The Quiet Hour",
+  "text": "The lighthouse had been dark for eleven years before Mira decided it was her problem. She had walked past it every morning of that time, and every morning it had looked back at her with the same patient indifference, and somewhere in the eleventh winter the arrangement stopped feeling neutral. Her father would have called this a symptom. He had a whole vocabulary for the things people did instead of sleeping, instead of eating, instead of speaking to one another about the thing that had actually happened. Mira had inherited the vocabulary and almost none of the discipline that was supposed to come with it.",
+  "voices": [
+    {
+      "name": "Heart",
+      "file": "/paper-sample-af_heart.mp3",
+      "duration": 37.15,
+      "sentences": [
+        {
+          "text": "The lighthouse had been dark for eleven years before Mira decided it was her problem.",
+          "start": 0,
+          "end": 5.625,
+          "paragraph": 0
+        },
+        {
+          "text": "She had walked past it every morning of that time, and every morning it had looked back at her with the same patient indifference, and somewhere in the eleventh winter the arrangement stopped feeling neutral.",
+          "start": 5.625,
+          "end": 17.675,
+          "paragraph": 0
+        },
+        {
+          "text": "Her father would have called this a symptom.",
+          "start": 17.675,
+          "end": 20.25,
+          "paragraph": 1
+        },
+        {
+          "text": "He had a whole vocabulary for the things people did instead of sleeping, instead of eating, instead of speaking to one another about the thing that had actually happened.",
+          "start": 20.25,
+          "end": 30.65,
+          "paragraph": 1
+        },
+        {
+          "text": "Mira had inherited the vocabulary and almost none of the discipline that was supposed to come with it.",
+          "start": 30.65,
+          "end": 37.15,
+          "paragraph": 1
+        }
+      ]
+    },
+    {
+      "name": "Emma",
+      "file": "/paper-sample-bf_emma.mp3",
+      "duration": 36.65,
+      "sentences": [
+        {
+          "text": "The lighthouse had been dark for eleven years before Mira decided it was her problem.",
+          "start": 0,
+          "end": 5.55,
+          "paragraph": 0
+        },
+        {
+          "text": "She had walked past it every morning of that time, and every morning it had looked back at her with the same patient indifference, and somewhere in the eleventh winter the arrangement stopped feeling neutral.",
+          "start": 5.55,
+          "end": 17.4,
+          "paragraph": 0
+        },
+        {
+          "text": "Her father would have called this a symptom.",
+          "start": 17.4,
+          "end": 20.325,
+          "paragraph": 1
+        },
+        {
+          "text": "He had a whole vocabulary for the things people did instead of sleeping, instead of eating, instead of speaking to one another about the thing that had actually happened.",
+          "start": 20.325,
+          "end": 30.35,
+          "paragraph": 1
+        },
+        {
+          "text": "Mira had inherited the vocabulary and almost none of the discipline that was supposed to come with it.",
+          "start": 30.35,
+          "end": 36.65,
+          "paragraph": 1
+        }
+      ]
+    }
+  ],
+  "timingSource": "Locally generated Kokoro sentence clips; boundaries measured from 24 kHz PCM sample counts.",
+  "model": "onnx-community/Kokoro-82M-v1.0-ONNX"
+}

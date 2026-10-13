@@ -1,0 +1,43 @@
+.note-preview {
+  position: fixed;
+  z-index: 60;
+  width: 240px;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: min(240px, calc(100dvh - 24px));
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 20px 22px 26px;
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 4px 12px rgba(43, 38, 32, .12);
+  font: 400 18px/1.55 var(--serif);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.note-preview[hidden] { display: none; }
+
+.note-preview { display: flex; flex-direction: column; overflow: hidden; }
+.note-preview-head { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; white-space: normal; font: 400 20px/1.4 var(--serif); }
+.note-preview-head button { width: 44px; flex: none; display: grid; place-items: center; min-height: 44px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; }
+.note-preview-head button:hover { background: var(--hover-bg); }
+.note-preview-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-right: 8px; }
+.note-preview :focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.note-preview.is-docked { max-width: none; max-height: none; padding: 8px 24px 20px; }
+html.note-preview-open #viewer {
+  padding-bottom: calc(var(--readerbar-h) + var(--note-preview-h) + 20px);
+}
+
+
+/* Keep dismissal beside a comfortable reading measure. */
+.note-preview.is-docked > * { width: 100%; max-width: 680px; margin-inline: auto; box-sizing: border-box; }
+.note-preview-head button svg { display: block; }
+
+/* Short landscape windows need the note's lines more than a separate title row. */
+@media (max-height: 500px) {
+  .note-preview.is-docked { padding: 12px 64px 12px 20px; }
+  .note-preview.is-docked .note-preview-head {
+    position: absolute; top: 8px; right: 8px; width: 44px;
+  }
+  .note-preview.is-docked .note-preview-head > span { display: none; }
+}

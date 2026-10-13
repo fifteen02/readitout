@@ -1,0 +1,226 @@
+/* The same small, tangible objects as the brass lamp and tea cup. */
+:root {
+  --desk-edge: #79613e; --desk-metal: #cfad72; --desk-light: #ead3a5;
+  --desk-paper: #fff7e5; --desk-fold: #e4d5b8; --desk-wood: #92704f;
+  --desk-leather: #475052; --desk-mark: #514a3d; --desk-shine: #fff8e4;
+}
+:root[data-theme="dark"] {
+  --desk-edge: #baa58d; --desk-metal: #967654; --desk-light: #c4a782;
+  --desk-paper: #d9c9af; --desk-fold: #ac9679; --desk-wood: #705140;
+  --desk-leather: #64505b; --desk-mark: #392d31; --desk-shine: #eedbc2;
+}
+svg.desk-icon { flex: none; width: 32px; height: 32px; overflow: visible; pointer-events: none; stroke: var(--desk-edge); stroke-width: 1.25; }
+.desk-icon .di-paper { fill: var(--desk-paper); }
+.desk-icon .di-fold { fill: var(--desk-fold); }
+.desk-icon .di-metal { fill: var(--desk-metal); }
+.desk-icon .di-light { fill: var(--desk-light); }
+.desk-icon .di-wood { fill: var(--desk-wood); }
+.desk-icon .di-binding, .desk-icon .di-leather { fill: var(--desk-leather); }
+.desk-icon .di-ribbon { fill: var(--accent); stroke: var(--desk-edge); }
+.desk-icon .di-detail { fill: none; stroke: var(--desk-mark); stroke-width: 1.4; }
+.desk-icon .di-bold { stroke-width: 2.5; }
+.desk-icon .di-engrave { fill: var(--desk-mark); stroke: var(--desk-mark); }
+.desk-icon .di-glass { fill: var(--desk-paper); fill-opacity: .65; }
+.desk-icon .di-highlight { fill: none; stroke: var(--desk-shine); stroke-width: 1.5; }
+html.reader-clarity :is(#readerOpen, #railSettings, #focusToggle, #playerPlay) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent; border-color: transparent; color: var(--ink); box-shadow: none;
+  padding: 4px 8px; min-height: 52px;
+}
+html.reader-clarity :is(#readerOpen, #railSettings, #focusToggle, #playerPlay):hover { background: var(--hover-bg); }
+html.reader-clarity :is(#railSettings[aria-expanded="true"], #focusToggle[data-active="true"], #playerPlay.is-playing) { background: var(--accent-soft); }
+html.reader-clarity :is(#readerOpen, #railSettings, #focusToggle, #playerPlay) > .desk-icon { width: 44px; height: 44px; }
+html.reader-clarity #welcomeOpen { background: transparent; border: 0; color: var(--ink); padding: 4px 12px 4px 0; gap: 16px; max-width: 100%; text-align: left; white-space: normal; }
+html.reader-clarity #welcomeOpen > .desk-icon { width: 72px; height: 72px; }
+/* The page, not the button container, responds to the invitation. */
+html.reader-clarity #welcomeOpen:is(:hover, :active, :focus-visible) { background: transparent; border-color: transparent; box-shadow: none; transform: none; }
+#welcomeOpen .di-book-right { transform-box: view-box; transform-origin: 28px 42px; transition: transform 300ms cubic-bezier(.16, 1, .3, 1); }
+#welcomeOpen .welcome-open-label { display: grid; gap: 8px; min-width: 0; }
+#welcomeOpen .welcome-open-label strong { font: 500 23px/1.25 var(--serif); letter-spacing: -.02em; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 5px; text-decoration-thickness: 1px; }
+#welcomeOpen .welcome-open-label small { font: 400 14px/1.4 var(--ui); color: var(--muted); }
+#welcomeOpen:focus-visible:not(:disabled) .di-book-right { transform: skewY(-10deg) scaleX(.88); }
+#welcomeOpen:focus-visible:not(:disabled) .welcome-open-label strong { text-decoration-color: var(--accent); }
+html.reader-clarity #welcomeOpen:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+@media (hover: hover) and (pointer: fine) {
+  #welcomeOpen:hover:not(:disabled) .di-book-right { transform: skewY(-10deg) scaleX(.88); }
+  #welcomeOpen:hover:not(:disabled) .welcome-open-label strong { text-decoration-color: var(--accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #welcomeOpen .di-book-right { transition: none; }
+  #welcomeOpen:is(:hover, :focus-visible):not(:disabled) .di-book-right { transform: none; }
+}
+html.reader-clarity .page-nav > .desk-icon, html.reader-clarity .player-transport .tbtn:not(.play) > .desk-icon { width: 32px; height: 32px; }
+html.reader-clarity :is(#playerPrev, #playerNext):disabled { opacity: .55; }
+/* A mirrored pair: the unavailable direction remains recognisable. */
+html.reader-clarity :is(#prevPage, #nextPage, #samplePrevious, #sampleNext):disabled { opacity: .55; }
+html.reader-clarity #introPlay { background: transparent; border: 0; color: var(--ink); }
+html.reader-clarity #introPlay > .desk-icon { width: 46px; height: 46px; }
+html.reader-clarity #readerDisplaySettings #appearanceTabs .desk-icon { width: 28px; height: 28px; }
+html.reader-clarity :is(.line-focus-steps, .line-focus-tools, #railFlyoutClose, #teaClose) .desk-icon { width: 28px; height: 28px; }
+html.reader-clarity :is(.sel-popover, .note-actions, .cmdk-ico) .desk-icon { width: 24px; height: 24px; }
+html.reader-clarity .read-marker .desk-icon { width: 22px; height: 22px; }
+@media (max-width: 720px) {
+  html.reader-clarity :is(#readerOpen, #railSettings, #focusToggle, #playerPlay) { min-height: 44px; gap: 4px; padding: 0 4px; }
+  html.reader-clarity :is(#readerOpen, #railSettings, #focusToggle, #playerPlay) > .desk-icon { width: 34px; height: 34px; }
+  html.reader-clarity #welcomeOpen > .desk-icon { width: 60px; height: 60px; }
+  #welcomeOpen .welcome-open-label strong { font-size: 21px; }
+  html.reader-clarity .tea-timer-trigger .tea-cup { display: block; width: 44px; height: 40px; }
+  html.reader-clarity .tea-timer-trigger .tea-mobile-icon { display: none; }
+}
+@media (forced-colors: active) {
+  svg.desk-icon { --desk-edge: ButtonText; --desk-metal: Canvas; --desk-light: Canvas; --desk-paper: Canvas; --desk-fold: Canvas; --desk-wood: Canvas; --desk-leather: Canvas; --desk-mark: ButtonText; --desk-shine: ButtonText; }
+}
+
+html.reader-clarity .readerbar #focusToggle { width: 52px; min-width: 52px; padding: 4px; gap: 0; border-color: transparent; background: transparent; box-shadow: none; }
+@media (max-width: 720px) {
+  html.reader-clarity .readerbar #focusToggle { width: 44px; min-width: 44px; }
+}
+/* Like the lamp, the object itself shows its state; no button-shaped backing. */
+html.reader-clarity .readerbar #focusToggle:is(:hover, [data-active="true"]) { background: transparent; border-color: transparent; }
+#focusToggle .focus-context { stroke-opacity: .45; }
+#focusToggle:is(:hover, [data-active="true"]) .focus-lens { fill: var(--desk-paper); fill-opacity: 1; }
+#focusToggle[data-active="true"] .focus-line { stroke-width: 3; }
+html.reader-clarity .readerbar #focusToggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; box-shadow: none; }
+
+/* A small brass GitHub emblem, with the same materials as the reading tools. */
+.lobby-footer .lobby-github { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; flex: none; border-radius: 50%; }
+.lobby-footer .lobby-github .desk-icon { width: 44px; height: 44px; }
+.lobby-github .github-mark { fill: var(--desk-mark); stroke: none; }
+.lobby-footer .lobby-github:hover { background: var(--hover-bg); text-decoration: none; }
+.lobby-footer .lobby-github:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (forced-colors: active) { .lobby-github .github-mark { fill: LinkText; } }
+
+/* Voice at the left, playback in the centre, speed and Focus at the right. */
+html.reader-clarity .readerbar {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 24px; padding-inline: 24px;
+}
+html.reader-clarity .readerbar .player-transport { grid-column: 2; margin: 0; gap: 4px; }
+html.reader-clarity .readerbar .pz-left { display: flex; grid-column: 1; gap: 16px; margin: 0; justify-self: start; }
+html.reader-clarity .readerbar .pz-right { grid-column: 3; margin: 0; gap: 24px; justify-self: end; }
+html.reader-clarity .readerbar #playerPlay { width: 52px; min-width: 52px; height: 52px; padding: 0; gap: 0; }
+@media (min-width: 721px) and (max-width: 1300px) {
+  html.reader-clarity .readerbar .voice-group .player-voice { width: 128px; }
+  html.reader-clarity .readerbar .speed-controls #playerRate { width: 48px; }
+}
+@media (max-width: 720px) {
+  html.reader-clarity .readerbar { grid-template-columns: minmax(0, 1fr) auto; gap: 0 16px; padding: 6px 12px; }
+  html.reader-clarity .readerbar .player-transport { grid-column: 1 / -1; grid-row: 1; justify-self: center; order: 0; gap: 0; }
+  html.reader-clarity .readerbar .pz-left { grid-column: 1; grid-row: 2; order: 0; gap: 0; }
+  html.reader-clarity .readerbar .voice-group { order: 0; flex: none; width: 128px; }
+  html.reader-clarity .readerbar .speed-controls { flex: none; order: 0; }
+  html.reader-clarity .readerbar .pz-right { grid-column: 2; grid-row: 2; gap: 16px; align-self: center; padding: 0; }
+  html.reader-clarity .readerbar #playerPlay { width: 44px; min-width: 44px; height: 44px; }
+}
+
+/* Small indicators and dismiss controls use the same artwork as desk tools. */
+.voice-picker-chevron, .voice-picker-check { display: inline-flex; align-items: center; }
+.voice-picker-trigger .voice-picker-chevron .desk-icon { width: 18px; height: 18px; }
+.voice-picker-option .voice-picker-check .desk-icon { width: 24px; height: 24px; }
+.toast .toast-x { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 44px; min-height: 44px; padding: 0; }
+.toast .toast-x .desk-icon { width: 28px; height: 28px; }
+html.reader-clarity .readerbar .voice-group .voice-picker-trigger { padding-right: 4px; }
+
+/* The selected persona needs room for its portrait and a complete role name. */
+html.reader-clarity .readerbar #voiceGroup { width: 240px; max-width: 100%; }
+html.reader-clarity .readerbar #voicePickerToggle { width: 100%; height: 44px; min-height: 44px; }
+html.reader-clarity .readerbar .voice-persona { white-space: nowrap; }
+@media (max-width: 720px) {
+  html.reader-clarity .readerbar #voiceGroup { width: 184px; }
+}
+
+/* Compact note actions share one row while retaining 44px-high hit targets. */
+html.reader-clarity .note-actions .desk-icon { width: 20px; height: 20px; }
+
+/* Transport and its preparation measure form one compact horizontal group. */
+:root.reader-clarity { --readerbar-h: calc(84px + env(safe-area-inset-bottom, 0px)); }
+html.reader-clarity .readerbar { padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+html.reader-clarity .readerbar .player-transport {
+  display: grid; grid-template-columns: 44px 52px 44px 44px;
+  grid-template-rows: 52px; column-gap: 4px; padding: 0; align-items: center;
+}
+html.reader-clarity .readerbar #playerPrev { grid-column: 1; grid-row: 1; }
+html.reader-clarity .readerbar #playerPlay { grid-column: 2; grid-row: 1; }
+html.reader-clarity .readerbar #playerNext { grid-column: 3; grid-row: 1; }
+html.reader-clarity .readerbar #playerGoto { position: static; transform: none; grid-column: 4; grid-row: 1; }
+@media (max-width: 960px) {
+  :root.reader-clarity { --readerbar-h: calc(124px + env(safe-area-inset-bottom, 0px)); }
+  html.reader-clarity .readerbar { grid-template-columns: 1fr auto; grid-template-rows: 44px 52px; gap: 8px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  html.reader-clarity .readerbar .pz-left { grid-column: 1; grid-row: 1; padding: 0; }
+  html.reader-clarity .readerbar .pz-right { grid-column: 2; grid-row: 1; padding: 0; gap: 12px; }
+  html.reader-clarity .readerbar #voiceGroup { width: 184px; }
+  html.reader-clarity .readerbar .player-transport { grid-column: 1 / -1; grid-row: 2; justify-self: center; grid-template-columns: repeat(4,44px); grid-template-rows: 44px; column-gap: 0; }
+  html.reader-clarity .readerbar #playerPlay { width: 44px; min-width: 44px; height: 44px; }
+}
+@media (max-width: 379px) {
+  :root.reader-clarity { --readerbar-h: calc(124px + env(safe-area-inset-bottom, 0px)); }
+  html.reader-clarity .readerbar { grid-template-rows: 44px 52px; }
+  html.reader-clarity .readerbar .pz-right { gap: 4px; }
+  html.reader-clarity .readerbar #voiceGroup { width: 160px; }
+  html.reader-clarity .readerbar .player-transport { grid-template-columns: repeat(4,44px); grid-template-rows: 44px; }
+}
+
+/* Sand drains before the glass turns; this is activity, not a time estimate. */
+#playerPlay.loading > svg { transform-origin: center; animation: hourglass-turn 3.6s ease-in-out infinite; }
+#playerPlay.loading .hourglass-upper { transform-origin: 28px 28px; animation: hourglass-drain 3.6s linear infinite; }
+#playerPlay.loading .hourglass-lower { transform-origin: 28px 42px; animation: hourglass-fill 3.6s linear infinite; }
+#playerPlay.loading .hourglass-stream { animation: hourglass-fall 3.6s linear infinite; }
+@keyframes hourglass-turn { 0%, 76% { transform: rotate(0); } 96%, 100% { transform: rotate(180deg); } }
+@keyframes hourglass-drain { 0% { transform: scaleY(1); } 74%, 100% { transform: scaleY(.08); } }
+@keyframes hourglass-fill { 0% { transform: scaleY(.08); } 74%, 100% { transform: scaleY(1); } }
+@keyframes hourglass-fall { 0%, 73% { opacity: .8; } 76%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  #playerPlay.loading > svg, #playerPlay.loading .hourglass-upper,
+  #playerPlay.loading .hourglass-lower, #playerPlay.loading .hourglass-stream { animation: none; }
+  #playerPlay.loading .hourglass-stream { opacity: 0; }
+}
+
+/* Buffer reserve belongs beside Settings; keep transport centred below the page. */
+html.reader-clarity #playbackProgress {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 8px;
+  flex: 0 0 112px; width: 112px; align-self: center; margin: 0 8px;
+  color: var(--ink-soft); font: 13px/1.2 var(--serif);
+}
+html.reader-clarity #playbackProgress[hidden] { display: none; }
+html.reader-clarity #playbackProgress .buffer-amount { color: var(--ink); }
+html.reader-clarity #playbackProgress progress {
+  grid-column: 1 / -1; width: 100%; height: 4px;
+  background: var(--soft-line); color: var(--desk-mark); border-radius: 1px;
+}
+html.reader-clarity #playbackProgress progress::-webkit-progress-value { background: var(--desk-metal); }
+html.reader-clarity #playbackProgress progress::-moz-progress-bar { background: var(--desk-metal); }
+@media (max-width: 600px) {
+  html.reader-clarity #playbackProgress { flex-basis: 76px; width: 76px; margin: 0; gap: 3px; font-size: 12px; }
+  html.reader-clarity #playbackProgress .playback-label { display: none; }
+  html.reader-clarity #playbackProgress .buffer-amount { grid-column: 1 / -1; text-align: center; }
+}
+
+
+/* Landscape phones need one player row and more room for the manuscript. */
+@media (min-width: 600px) and (max-height: 500px) {
+  :root.reader-clarity {
+    --reader-header-h: 52px;
+    --readerbar-h: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+  html.reader-clarity .topbar { min-height: 52px; height: 52px; padding-block: 4px; }
+  html.reader-clarity .topbar .reading-lamp,
+  html.reader-clarity .tea-timer-trigger { width: 44px; height: 44px; min-height: 44px; padding: 0; }
+  html.reader-clarity .topbar .lamp-drawing { width: 40px; height: 40px; }
+  html.reader-clarity #teaCaption { display: none; }
+  html.reader-clarity .tea-timer-trigger .tea-cup { width: 44px; height: 40px; }
+  html.reader-clarity #railSettings { min-height: 44px; height: 44px; }
+  html.reader-clarity .readerbar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: 44px; gap: 8px;
+    padding: 9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+  }
+  html.reader-clarity .readerbar .pz-left { grid-column: 1; grid-row: 1; }
+  html.reader-clarity .readerbar .pz-right { grid-column: 3; grid-row: 1; gap: 4px; }
+  html.reader-clarity .readerbar .player-transport {
+    grid-column: 2; grid-row: 1; grid-template-columns: repeat(4, 44px); grid-template-rows: 44px;
+  }
+  html.reader-clarity .readerbar #voiceGroup { width: 184px; }
+  html.reader-clarity .readerbar :is(#playerPlay, #focusToggle) { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+  html.reader-clarity .readerbar :is(#playerPlay, #focusToggle) > .desk-icon { width: 36px; height: 36px; }
+  html.reader-clarity .tea-controls { max-height: calc(100dvh - var(--reader-header-h) - var(--topbar-h) - 24px); }
+}

@@ -1,0 +1,39 @@
+.line-focus-guide {
+  position: absolute; right: 4vw; bottom: calc(100% + 12px); z-index: 45;
+  width: min(320px, calc(100vw - 24px)); max-height: calc(100dvh - var(--readerbar-h) - 32px); overflow-y: auto;
+  background: var(--panel); color: var(--ink);
+  border: 0; border-radius: 8px; padding: 18px;
+  box-shadow: var(--page-shadow);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; text-align: left;
+}
+.line-focus-guide[hidden] { display: none; }
+.line-focus-copy { min-width: 0; margin-bottom: 8px; }
+.line-focus-copy h2 { margin: 0 36px 0 0; font: var(--type-panel-title); text-transform: none; letter-spacing: -.015em; color: var(--ink); }
+.line-focus-hint { margin: 8px 0 14px; color: var(--ink-soft); font: var(--type-panel-copy); }
+.line-focus-steps { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.line-focus-guide button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: auto; min-width: 44px; min-height: 44px; padding: 8px 12px; font: inherit; font-size: 14px;
+  color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 4px;
+}
+.line-focus-guide button:hover { background: var(--hover-bg); }
+.line-focus-guide button:focus-visible, .line-focus-guide input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px;
+}
+.line-focus-guide svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; flex: none; }
+.line-focus-dim { margin: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; font-size: 14px; font-weight: 400; cursor: pointer; }
+.line-focus-dim input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.line-focus-shade { border-top: 1px solid var(--soft-line); padding-top: 10px; }
+.line-focus-tools button { border-color: transparent; color: var(--ink-soft); }
+.line-focus-tools .line-focus-collapse { position: absolute; right: 9px; top: 12px; padding: 8px; }
+.line-focus-steps button { flex: 1; }
+.line-focus-tools { display: contents; }
+.line-focus-steps[hidden] { display: none; }
+@media (max-width: 720px) {
+  .line-focus-guide { right: 12px; }
+}
+@media (max-height: 500px) {
+  .line-focus-guide { padding: 14px 18px; }
+  .line-focus-copy { margin-bottom: 2px; }
+  .line-focus-hint { margin-bottom: 8px; }
+}

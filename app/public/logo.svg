@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Read It Out">
+  <defs>
+    <linearGradient id="rio-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d5794b"/>
+      <stop offset="1" stop-color="#a8542f"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#rio-bg)"/>
+  <!-- voice waveform (matches the app logo mark) -->
+  <g fill="#fbf6ee">
+    <rect x="14" y="27" width="4" height="10" rx="2"/>
+    <rect x="22" y="22" width="4" height="20" rx="2"/>
+    <rect x="30" y="18" width="4" height="28" rx="2"/>
+    <rect x="38" y="22" width="4" height="20" rx="2"/>
+    <rect x="46" y="27" width="4" height="10" rx="2"/>
+  </g>
+</svg>
