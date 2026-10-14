@@ -724,3 +724,10 @@ html.reader-clarity #railFlyout #settingsReading #rate { width: 100%; min-height
     scrollbar-width: thin; padding-right: 8px;
   }
 }
+
+/* Page-size controls stay within reach beside the page tracker. */
+.reader-clarity .pdf-zoom-controls { display: flex; flex: none; gap: 0; border-inline: 1px solid var(--soft-line); padding-inline: 4px; }
+.reader-clarity .pdf-zoom-controls button { width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--ink); font: 24px/1 var(--serif); border-radius: 4px; }
+.reader-clarity .pdf-zoom-controls button:hover:not(:disabled) { background: var(--hover-bg); }
+.reader-clarity .pdf-zoom-controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.reader-clarity .pdf-zoom-controls button:disabled { opacity: .35; cursor: default; }

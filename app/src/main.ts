@@ -206,7 +206,7 @@ async function loadPdf(file: File, isCurrent: () => boolean): Promise<void> {
     const scale = await scaleForMode(zoomMode, state.pdf, ui.viewer);
     if (!isCurrent()) return;
     state.scale = scale;
-    syncZoomSelect(ui.zoom, state.scale, zoomMode);
+    syncReaderZoom(ui.zoom, state.scale, zoomMode);
     requestAnimationFrame(() => { if (isCurrent()) ui.app.classList.remove("resizing"); });
     showLoader(`Rendering ${state.pdf.numPages} pages…`);
     await cachePageDims(); // exact per-page sizes up front → no layout shift on zoom/scroll
@@ -1547,7 +1547,17 @@ ui.zoom.addEventListener("change", () => {
   if (v === "fit-width" || v === "fit-page") { zoomMode = v; void applyFit(); }
   else { zoomMode = "fixed"; void setZoom(Number(v)); }
 });
-ui.zoomOut.addEventListener("click", () => { zoomMode = "fixed"; setZoom(Math.max(0.6, state.scale - 0.15)); });
+function syncReaderZoom(select: HTMLSelectElement, scale: number, mode: ZoomMode = 'fixed'): void {
+  syncZoomSelect(select, scale, mode);
+  for (const [id, disabled] of [['readerZoomOut', scale <= 0.2], ['readerZoomIn', scale >= 3]] as const) {
+    const button = document.getElementById(id) as HTMLButtonElement;
+    button.disabled = disabled;
+    button.title = `${id === 'readerZoomOut' ? 'Zoom out' : 'Zoom in'} · ${Math.round(scale * 100)}%`;
+  }
+}
+document.getElementById('readerZoomOut')!.addEventListener('click', () => ui.zoomOut.click());
+document.getElementById('readerZoomIn')!.addEventListener('click', () => ui.zoomIn.click());
+ui.zoomOut.addEventListener("click", () => { zoomMode = "fixed"; setZoom(Math.max(0.2, state.scale - 0.15)); });
 ui.zoomIn.addEventListener("click", () => { zoomMode = "fixed"; setZoom(Math.min(3, state.scale + 0.15)); });
 
 // Trackpad pinch-to-zoom (arrives as ctrl+wheel). The +/- buttons go through setZoom's
@@ -2119,7 +2129,7 @@ async function setZoom(scale: number, anchorScroll = true): Promise<void> {
   zooming = true; // freeze the page number while the re-render's scroll events fire
   state.scale = next;
   state.page = anchorPage;
-  syncZoomSelect(ui.zoom, state.scale, "fixed");
+  syncReaderZoom(ui.zoom, state.scale, "fixed");
   await renderPages(sizeHints);
   // Pinch drives its own cursor-anchored scroll — skip so the two don't fight.
   if (anchorScroll) {
@@ -2168,7 +2178,7 @@ async function applyFit(): Promise<void> {
   // A manual zoom or a different document may supersede this asynchronous fit.
   if (state.pdf !== pdf || zoomMode !== mode) return;
   if (state.scale === nextScale) {
-    syncZoomSelect(ui.zoom, state.scale, mode);
+    syncReaderZoom(ui.zoom, state.scale, mode);
     return;
   }
   // Anchor on the spot under the viewport centre (page + fraction into it) and restore it
@@ -2183,7 +2193,7 @@ async function applyFit(): Promise<void> {
   zooming = true;
   state.scale = nextScale;
   state.page = anchor;
-  syncZoomSelect(ui.zoom, state.scale, zoomMode);
+  syncReaderZoom(ui.zoom, state.scale, zoomMode);
   await renderPages();
   const after = ui.viewer.querySelector<HTMLElement>(`.page[data-page="${anchor}"]`);
   if (after) {
