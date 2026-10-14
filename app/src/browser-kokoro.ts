@@ -1,4 +1,5 @@
 export interface KokoroState {
+  device?: 'webgpu' | 'wasm';
   phase: 'idle' | 'loading' | 'ready' | 'error';
   message: string;
   stage?: 'checking' | 'downloading' | 'preparing';
@@ -24,13 +25,14 @@ let loading: Promise<void> | undefined;
 const listeners = new Set<(value: KokoroState) => void>();
 const pending = new Map<number, {resolve: (buffer?: ArrayBuffer) => void; reject: (error: Error) => void; cleanup: () => void}>();
 function update(phase: KokoroState['phase'], message: string, stage?: KokoroState['stage'], progress?: number, loaded?: number, total?: number): void {
-  state = {phase, message, stage, loaded, total, progress: Number.isFinite(progress) ? Math.max(0, Math.min(100, progress!)) : undefined};
+  state = {phase, message, stage, loaded, total, device: state.device, progress: Number.isFinite(progress) ? Math.max(0, Math.min(100, progress!)) : undefined};
   listeners.forEach(listener => listener(state));
 }
 export function onKokoroState(listener: (value: KokoroState) => void): () => void {
   listeners.add(listener); listener(state); return () => listeners.delete(listener);
 }
 function reset(error: Error): void {
+  state = {...state, device: undefined};
   worker?.terminate(); worker = undefined; loading = undefined;
   for (const item of pending.values()) { item.cleanup(); item.reject(error); }
   pending.clear();
@@ -40,19 +42,23 @@ export function cancelBrowserKokoro(): void {
   reset(new DOMException('Voice preparation cancelled.', 'AbortError'));
   update('idle', 'Cancelled. Downloaded files may be reused when you try again.');
 }
+function voiceReadyMessage(): string {
+  return `Voice ready · ${state.device === 'webgpu' ? 'GPU accelerated' : 'CPU'}. Your text stays on this device.`;
+}
 function getWorker(): Worker {
   if (worker) return worker;
   const current = new Worker(new URL('./kokoro-worker.ts', import.meta.url), {type:'module'});
   worker = current;
-  worker.onmessage = (event: MessageEvent<{id?: number; type?: string; message?: string; error?: string; buffer?: ArrayBuffer; stage?: KokoroState['stage']; progress?: number; loaded?: number; total?: number; speech?: SpeechProgress}>) => {
+  worker.onmessage = (event: MessageEvent<{id?: number; type?: string; device?: KokoroState['device']; message?: string; error?: string; buffer?: ArrayBuffer; stage?: KokoroState['stage']; progress?: number; loaded?: number; total?: number; speech?: SpeechProgress}>) => {
     if (worker !== current) return;
     const data = event.data;
+    if (data.type === 'backend') { state = {...state, device:data.device}; return; }
     if (data.type === 'speech-timing') { console.debug('[speech generation]', data.message); return; }
     if (data.type === 'model-status') { update('loading', data.message!, data.stage, data.progress, data.loaded, data.total); return; }
     if (data.type === 'speech-progress' && data.speech && pending.has(data.speech.id)) { updateSpeech(data.speech); return; }
     // Speech generation and prefetch are not model downloads.
     if (data.type === 'status') { return; }
-    if (data.type === 'ready') { update('ready', 'Voice ready. Your text is processed on this device.'); return; }
+    if (data.type === 'ready') { update('ready', voiceReadyMessage()); return; }
     if (data.id === undefined) return;
     const item = pending.get(data.id);
     if (!item) return;
@@ -97,7 +103,7 @@ export async function prepareBrowserKokoro(): Promise<void> {
   update('loading', 'Loading your reading voice…', 'checking');
   const operation = request('load').then(() => {
     localStorage.setItem(CONSENT, '1');
-    update('ready', 'Voice ready. Your text is processed on this device.');
+    update('ready', voiceReadyMessage());
   }).catch(error => {
     if (error.name !== 'AbortError') update('error', `${error.message} Try loading the reading voice again.`);
     throw error;
@@ -107,7 +113,7 @@ export async function prepareBrowserKokoro(): Promise<void> {
 }
 export async function generateBrowserSpeech(text: string, voice: string, signal?: AbortSignal): Promise<Blob> {
   if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
-  if (localStorage.getItem(CONSENT) !== '1') throw new Error('Choose Download reading voice in Settings first (about 120 MB).');
+  if (localStorage.getItem(CONSENT) !== '1') throw new Error('Choose Download reading voice in Settings first (about 120–450 MB).');
   // A new tab reloads cached model files, without transmitting text.
   if (!worker) update('loading', 'Loading your reading voice…', 'checking');
   const buffer = await request('generate', text, voice, signal);

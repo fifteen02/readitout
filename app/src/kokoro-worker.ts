@@ -3,6 +3,7 @@ import { env } from '@huggingface/transformers';
 import wasmUrl from '../node_modules/@huggingface/transformers/dist/ort-wasm-simd-threaded.jsep.wasm?url';
 import wasmModuleUrl from '../node_modules/@huggingface/transformers/dist/ort-wasm-simd-threaded.jsep.mjs?url';
 import { pcmToWav, splitKokoroText } from './kokoro-audio';
+import { voiceBackend, voiceDevice, type VoiceDevice } from './voice-backend';
 import type { KokoroState } from './browser-kokoro';
 
 // Self-host the runtime; only public model/voice files come from Hugging Face.
@@ -12,18 +13,16 @@ env.backends.onnx.wasm!.wasmPaths = { wasm: wasmUrl, mjs: wasmModuleUrl };
 // fallback for hosts that do not supply the isolation headers.
 env.backends.onnx.wasm!.numThreads = self.crossOriginIsolated
   ? Math.max(1, Math.min(4, navigator.hardwareConcurrency || 1)) : 1;
-let model: Promise<KokoroTTS> | undefined;
 let queue = Promise.resolve();
 const cancelled = new Set<number>();
 const queued = new Set<number>();
 const scope = self as unknown as { postMessage: (value: unknown, transfer?: Transferable[]) => void; onmessage: ((event: MessageEvent) => void) | null };
 const modelStatus = (stage: KokoroState['stage'], message: string, progress?: number, loaded?: number, total?: number) => scope.postMessage({type:'model-status', stage, message, progress, loaded, total});
 
-function load(): Promise<KokoroTTS> {
-  if (model) return model;
+function load(device: VoiceDevice): Promise<KokoroTTS> {
   modelStatus('checking', 'Loading your reading voice…');
-  return model ??= KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
-    dtype:'q8', device:'wasm',
+  return KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', {
+    dtype: device === 'webgpu' ? 'fp32' : 'q8', device,
     progress_callback: progress => {
       // Only the model file owns the percentage; tokenizer/config files must not
       // reset the bar or imply that the whole download is already complete.
@@ -33,9 +32,16 @@ function load(): Promise<KokoroTTS> {
         else if (progress.status === 'done') modelStatus('preparing', 'Preparing your reading voice…');
       }
     }
-  }).then(tts => { modelStatus('preparing', 'Preparing your reading voice…'); return tts; })
-    .catch(error => { model = undefined; throw error; });
+  }).then(tts => { modelStatus('preparing', 'Preparing your reading voice…'); return tts; });
 }
+
+const withVoice = voiceBackend({
+  device: () => voiceDevice((navigator as unknown as { gpu?: { requestAdapter(): Promise<unknown> } }).gpu),
+  load,
+  selected: device => scope.postMessage({type:'backend', device}),
+  dispose: async tts => { await tts.model.dispose(); },
+  fallback: () => modelStatus('preparing', 'Switching to CPU reading…'),
+});
 
 scope.onmessage = (event: MessageEvent<{id: number; type: 'load' | 'generate' | 'cancel'; text?: string; voice?: string}>) => {
   const request = event.data;
@@ -48,11 +54,11 @@ scope.onmessage = (event: MessageEvent<{id: number; type: 'load' | 'generate' | 
   queue = queue.then(async () => {
     try {
       if (cancelled.has(request.id)) return;
-      const tts = await load();
+      const tts = await withVoice(async tts => tts);
       if (cancelled.has(request.id)) { scope.postMessage({type:'ready'}); return; }
       if (request.type === 'load') {
         // Load a voice and warm the model now, while progress is visible.
-        await tts.generate('Ready.', {voice:'af_heart'});
+        await withVoice(tts => tts.generate('Ready.', {voice:'af_heart'}));
         if (cancelled.has(request.id)) return;
         scope.postMessage({type:'ready'});
         scope.postMessage({id:request.id});
@@ -72,8 +78,9 @@ scope.onmessage = (event: MessageEvent<{id: number; type: 'load' | 'generate' | 
       }});
       report(0);
       for (const [i, sentence] of text.entries()) {
-        const audio = await tts.generate(sentence, {voice});
+        const audio = await withVoice(tts => tts.generate(sentence, {voice}));
         if (cancelled.has(request.id)) return;
+        scope.postMessage({type:'ready'});
         parts.push(audio.audio);
         completedChars += sentence.length;
         report(i + 1);

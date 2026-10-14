@@ -13,7 +13,7 @@ export function requestVoiceDownload(): Promise<boolean> {
     dialog.setAttribute('aria-describedby', 'voiceDownloadDescription');
     dialog.innerHTML = `<form method="dialog">
       <h2 id="voiceDownloadTitle" tabindex="-1">Download the reading voice</h2>
-      <p id="voiceDownloadDescription">Before your first listen, download about <strong>120 MB</strong> of voice files. Your browser can reuse them next time.</p>
+      <p id="voiceDownloadDescription">Before your first listen, download about <strong>120–450 MB</strong> of voice files. Your browser can reuse them next time.</p>
       <p class="voice-download-privacy">Your draft stays on this device. The voice reads it here, without uploading your text.</p>
       <p class="voice-download-next">You’ll see the download progress, then reading will start from where you chose.</p>
       <div class="voice-download-actions">

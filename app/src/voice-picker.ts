@@ -1,3 +1,4 @@
+import { onKokoroState, type KokoroState } from './browser-kokoro';
 import { deskIcon } from "./desk-icons";
 import './voice-picker.css';
 
@@ -60,11 +61,18 @@ export function initVoicePicker(select: HTMLSelectElement, settings: HTMLSelectE
     }
     list.append(group);
   }
+  let voiceState: KokoroState | undefined;
   const sync = () => {
     const label = select.selectedOptions[0]?.textContent || 'Choose voice';
     const name = voiceIdentity(select.value, label);
+    if (voiceState?.phase === 'ready' && voiceState.device) {
+      const detail = name.querySelector('.voice-persona');
+      if (detail) detail.textContent = voiceState.device === 'webgpu' ? 'GPU · On-device voice' : 'CPU · On-device voice';
+    }
     const chevron = document.createElement('span'); chevron.className = 'voice-picker-chevron'; chevron.innerHTML = deskIcon('chevron'); chevron.setAttribute('aria-hidden','true');
-    trigger.replaceChildren(name,chevron); trigger.setAttribute('aria-label', `Reading voice: ${label}${PERSONAS[select.value] ? `, ${PERSONAS[select.value].role}` : ""}`);
+    trigger.replaceChildren(name,chevron);
+    const deviceLabel = voiceState?.phase === 'ready' && voiceState.device ? (voiceState.device === 'webgpu' ? 'GPU accelerated' : 'CPU') : PERSONAS[select.value]?.role;
+    trigger.setAttribute('aria-label', `Reading voice: ${label}${deviceLabel ? `, ${deviceLabel}` : ''}`);
     options.forEach(option => { const selected = option.dataset.value === select.value; option.setAttribute('aria-selected', String(selected)); option.tabIndex = selected ? 0 : -1; });
   };
   const focusOption = (option: HTMLButtonElement | undefined) => {
@@ -73,6 +81,7 @@ export function initVoicePicker(select: HTMLSelectElement, settings: HTMLSelectE
     options.forEach(item => { item.tabIndex = item === option ? 0 : -1; });
     option.focus();
   };
+  onKokoroState(value => { voiceState = value; sync(); });
   const position = () => {
     const rect = trigger.getBoundingClientRect();
     panel.style.width = `${Math.min(320, window.innerWidth - 32)}px`;

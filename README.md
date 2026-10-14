@@ -53,8 +53,8 @@ sample opens a reading copy with desktop or phone page proportions.
 ## Voices
 
 **Kokoro is the standard model.** Choose an English voice such as Heart or Emma in the
-reader. Download it through **Settings → Reading voice** (about 120 MB including runtime
-files). It runs in the browser using ONNX Runtime WebAssembly, with no cloud speech call.
+reader. Download it through **Settings → Reading voice** (about 120–450 MB including runtime
+files). It uses WebGPU when an adapter is available, with a CPU/WebAssembly fallback if GPU loading or generation fails. There is no cloud speech call.
 Older devices may take longer to prepare each passage. Kokoro is the only speech engine;
 readers choose a voice without selecting a model or provider.
 

@@ -14,9 +14,8 @@ npm run dev:web
 ```
 
 Open http://localhost:5273. Open a PDF, then use **Settings → Reading voice → Download
-reading voice**. About 120 MB of runtime, model, tokenizer, and voice assets are needed
-on first use. The browser caches downloaded files when storage allows. The English Kokoro
-q8 model uses ONNX Runtime WebAssembly, one thread, without cross-origin isolation.
+reading voice**. About 120–450 MB of runtime, model, tokenizer, and voice assets are needed
+on first use. The browser caches downloaded files when storage allows. The English Kokoro model uses FP32 with WebGPU when an adapter is available. GPU loading or generation failures retry on the q8 CPU/WebAssembly backend for the rest of the worker session. Without cross-origin isolation, WebAssembly uses one thread.
 Inference runs off the UI thread; speed depends on the device. User text is never sent to a speech service.
 
 ## Lobby audio

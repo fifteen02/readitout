@@ -51,14 +51,14 @@ export function initVoiceNotice(player: HTMLElement, cancel: () => void): void {
       percent.textContent = `${Math.floor(current.progress)}%`;
     }
     if (current.phase === 'error') detail.textContent = `${current.message} You can retry here.`;
-    else if (current.phase === 'ready') detail.textContent = 'Ready to listen on this device.';
+    else if (current.phase === 'ready') detail.textContent = current.message;
     else if (current.stage === 'downloading') {
       const measured = transfer.read(now);
       const bytes = current.total && current.loaded !== undefined ? `${(current.loaded / 1e6).toFixed(1)} / ${(current.total / 1e6).toFixed(1)} MB` : 'Downloading voice files';
       const rate = measured.bytesPerSecond ? ` · ${(measured.bytesPerSecond / 1e6).toFixed(1)} MB/s` : '';
       const eta = measured.secondsLeft === undefined ? ' · estimating download time…' : ` · about ${duration(measured.secondsLeft)} left to download`;
       detail.textContent = bytes + rate + eta;
-    } else detail.textContent = `CPU · ${elapsed} elapsed · ${current.stage === 'preparing' ? 'Warming up the voice. Time remaining isn’t available yet.' : 'Checking saved files on this device.'}`;
+    } else detail.textContent = `${current.device === 'webgpu' ? 'GPU' : current.device === 'wasm' ? 'CPU' : 'On-device'} · ${elapsed} elapsed · ${current.stage === 'preparing' ? 'Warming up the voice. Time remaining isn’t available yet.' : 'Checking saved files on this device.'}`;
   }
   function schedule(): void {
     if (ticker) clearInterval(ticker);
